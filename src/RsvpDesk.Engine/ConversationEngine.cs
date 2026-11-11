@@ -102,6 +102,12 @@ public sealed class ConversationEngine
             return HandleChange(state, ev);
         }
 
+        if (replyId == OptionIds.Resume && state.Step is not (Step.NotInvited or Step.Confirmed or Step.Declined))
+        {
+            // "Continue" from a reminder: ask the current question again, without counting it as invalid.
+            return Ask(state, ev);
+        }
+
         var input = new Input(text, replyId, inbound.Text?.Trim() ?? string.Empty);
 
         return state.Step switch

@@ -34,7 +34,8 @@
     "diet_summary_other": "{label}: {note}",
     "diet_summary_separator": ", ",
     "number_option": "{n}",
-    "list_button": "Choose"
+    "list_button": "Choose",
+    "list_section_title": "Options"
   },
 
   "options": {
@@ -53,7 +54,8 @@
 
     "note.skip": { "label": "Skip", "aliases": ["skip", "no", "none", "nothing", "no thanks", "n/a", "na", "nope"] },
 
-    "change": { "label": "Change", "aliases": [] }
+    "change": { "label": "Change", "aliases": [] },
+    "resume": { "label": "Continue", "aliases": [] }
   },
 
   "keywords": {

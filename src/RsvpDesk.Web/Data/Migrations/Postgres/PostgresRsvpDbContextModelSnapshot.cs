@@ -184,7 +184,13 @@ namespace RsvpDesk.Web.Data.Migrations.Postgres
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
+                    b.Property<string>("WhatsAppUserId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WhatsAppUserId");
 
                     b.HasIndex("EventId", "PhoneE164")
                         .IsUnique();
@@ -210,9 +216,16 @@ namespace RsvpDesk.Web.Data.Migrations.Postgres
                     b.Property<string>("ChoicesJson")
                         .HasColumnType("text");
 
+                    b.Property<string>("DeliveryError")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
                     b.Property<string>("DeliveryStatus")
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset?>("DeliveryStatusAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Direction")
                         .IsRequired()

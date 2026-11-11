@@ -4,7 +4,7 @@ An event management web app where guests receive an invitation and RSVP through 
 
 This is a portfolio project. Every event and guest in the demo is fictional.
 
-> **Status:** in progress. Build steps 1 to 6 are done: RSVP as a fictional guest in the simulator, then follow it on the staff dashboard and in the catering and access report. See [Build progress](#build-progress).
+> **Status:** in progress. Build steps 1 to 7 are done: RSVP as a fictional guest in the simulator, then follow it on the staff dashboard and in the catering and access report. See [Build progress](#build-progress).
 
 ## Two modes
 
@@ -86,6 +86,23 @@ dotnet test
 
 The PostgreSQL migration test runs only when `RSVP_TEST_POSTGRES` holds a connection string. To run the integration tests against PostgreSQL instead of SQLite, also set `RSVP_TEST_DB=Postgres`. CI does both.
 
+### Live WhatsApp mode
+
+Simulator mode needs nothing. Live mode needs your own Meta app, a WhatsApp test number and approved templates. What Meta's documentation says is summarised in [docs/whatsapp-integration.md](docs/whatsapp-integration.md).
+
+1. Create a Meta app with the "Connect with customers through WhatsApp" use case and note the **phone number ID** in API Setup. Create a system user with the `business_management` and `whatsapp_business_messaging` permissions and generate a **permanent access token**.
+2. Submit the three templates in [docs/templates.md](docs/templates.md) and wait for approval.
+3. Deploy the app on a public HTTPS address and set the secrets as environment variables (or `dotnet user-secrets` locally):
+   ```bash
+   Channel__Mode=WhatsApp
+   WhatsApp__PhoneNumberId=...
+   WhatsApp__AccessToken=...
+   WhatsApp__AppSecret=...      # App Dashboard > App settings > Basic
+   WhatsApp__VerifyToken=...    # any long random string you choose
+   ```
+4. In the App Dashboard, set the callback URL to `https://<your host>/webhooks/whatsapp`, enter the same verify token, and subscribe to the `messages` field.
+5. Add a guest with your own number and consent, send the invitation from the dashboard, and reply on your phone.
+
 ### Database
 
 SQLite by default (a file, good for the demo). For PostgreSQL:
@@ -105,7 +122,7 @@ Migrations are applied on startup unless `Database__MigrateOnStartup=false`.
 4. [x] Dashboard
 5. [x] Reports and CSV exports
 6. [x] Invitations, reminders and CSV import
-7. [ ] Live WhatsApp mode
+7. [x] Live WhatsApp mode (tested against a fake Graph API; needs your Meta app for a real run)
 8. [ ] Hardening and polish
 
 ## Privacy

@@ -1,0 +1,42 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "100000000000002",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "27000000099",
+              "phone_number_id": "100000000000001"
+            },
+            "contacts": [
+              {
+                "profile": {
+                  "name": "Thandi Example"
+                },
+                "wa_id": "27000000001",
+                "user_id": "ZA.000000000000000001"
+              }
+            ],
+            "messages": [
+              {
+                "from": "27000000001",
+                "from_user_id": "ZA.000000000000000001",
+                "id": "wamid.FIXTURE.REACTION",
+                "timestamp": "1764950400",
+                "type": "reaction",
+                "reaction": {
+                  "message_id": "wamid.FIXTURE.OUT.1",
+                  "emoji": "👍"
+                }
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}

@@ -42,9 +42,20 @@ public sealed class ConversationService(
         string? error = null;
         try
         {
-            foreach (var inbound in channels.ForSource(source).Normalise(raw))
+            foreach (var channelEvent in channels.ForSource(source).Normalise(raw))
             {
-                await WithConcurrencyRetryAsync(() => HandleInboundAsync(inbound, cancellationToken), cancellationToken);
+                switch (channelEvent)
+                {
+                    case NormalisedInbound inbound:
+                        await WithConcurrencyRetryAsync(() => HandleInboundAsync(inbound, cancellationToken), cancellationToken);
+                        break;
+                    case DeliveryUpdate update:
+                        await ApplyDeliveryUpdateAsync(update, cancellationToken);
+                        break;
+                    case IgnoredEvent ignored:
+                        logger.LogDebug("Ignored inbound event {EventId}: {Reason}", eventId, ignored.Reason);
+                        break;
+                }
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -136,10 +147,15 @@ public sealed class ConversationService(
 
         var guest = inbound.From.GuestId is { } id
             ? await LoadGuestAsync(g => g.Id == id, cancellationToken)
-            : await LoadGuestByPhoneAsync(inbound.From.PhoneE164, cancellationToken);
+            : await LoadGuestByAddressAsync(inbound.From, cancellationToken);
         if (guest is null)
         {
             throw new InvalidOperationException("Inbound message from an unknown guest.");
+        }
+
+        if (inbound.From.ProviderUserId is { Length: > 0 } providerUserId && guest.WhatsAppUserId != providerUserId)
+        {
+            guest.WhatsAppUserId = providerUserId;
         }
 
         var now = clock.GetUtcNow();
@@ -268,11 +284,14 @@ public sealed class ConversationService(
         }
 
         var channel = channels.Active;
+        var context = new OutboundContext(guest.Event.ToDetails(), guest.Conversation?.State ?? Step.NotInvited, guest.LastInboundAt);
         foreach (var (row, rendered) in outbound)
         {
-            var result = await channel.SendAsync(new OutboundEnvelope(guest.Id, guest.PhoneE164, rendered), cancellationToken);
+            var result = await channel.SendAsync(new OutboundEnvelope(guest.Id, guest.PhoneE164, guest.WhatsAppUserId, rendered, context), cancellationToken);
             row.ProviderMessageId = result.ProviderMessageId;
             row.DeliveryStatus = result.Success ? DeliveryStatus.Sent : DeliveryStatus.Failed;
+            row.DeliveryStatusAt = clock.GetUtcNow();
+            row.DeliveryError = result.Success ? null : Truncate(result.Error ?? "Send failed.", 300);
             if (!result.Success)
             {
                 logger.LogWarning("Sending to guest {GuestId} failed: {Error}", guest.Id, result.Error);
@@ -306,22 +325,69 @@ public sealed class ConversationService(
             .FirstOrDefaultAsync(predicate, cancellationToken);
 
     /// <summary>
-    /// The same phone can be on several events' guest lists; use the most recent event.
-    /// Live-mode routing is revisited in build step 7.
+    /// Finds the guest a WhatsApp message is from: by phone number, or by the business-scoped user id
+    /// learnt from an earlier message (WhatsApp omits the number for users with a username).
+    /// One person can be on several events' lists; the conversation that is still open wins, then
+    /// the event that starts soonest from now, then the most recently invited (decisions D-607).
     /// </summary>
-    private async Task<Guest?> LoadGuestByPhoneAsync(string? phone, CancellationToken cancellationToken)
+    private async Task<Guest?> LoadGuestByAddressAsync(GuestAddress address, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(phone))
+        if (string.IsNullOrEmpty(address.PhoneE164) && string.IsNullOrEmpty(address.ProviderUserId))
         {
             return null;
         }
 
-        var id = await db.Guests
-            .Where(g => g.PhoneE164 == phone)
-            .OrderByDescending(g => g.EventId)
-            .Select(g => (int?)g.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-        return id is null ? null : await LoadGuestAsync(g => g.Id == id, cancellationToken);
+        var now = clock.GetUtcNow();
+        var candidates = await db.Guests
+            .Where(g => (address.PhoneE164 != null && g.PhoneE164 == address.PhoneE164)
+                || (address.ProviderUserId != null && g.WhatsAppUserId == address.ProviderUserId))
+            .Select(g => new { g.Id, g.Status, g.InviteSentAt, g.Event.StartsAt })
+            .ToListAsync(cancellationToken);
+        var best = candidates
+            .OrderByDescending(c => c.Status is GuestStatus.Invited or GuestStatus.InChat)
+            .ThenByDescending(c => c.InviteSentAt is not null)
+            .ThenByDescending(c => c.StartsAt >= now)
+            .ThenBy(c => c.StartsAt >= now ? c.StartsAt - now : now - c.StartsAt)
+            .ThenByDescending(c => c.InviteSentAt)
+            .FirstOrDefault();
+        return best is null ? null : await LoadGuestAsync(g => g.Id == best.Id, cancellationToken);
+    }
+
+    /// <summary>
+    /// Delivery statuses only move forward (Pending → Sent → Delivered → Read); "failed" applies only
+    /// before delivery. Repeats and out-of-order callbacks therefore can't corrupt the state (§4).
+    /// </summary>
+    private async Task ApplyDeliveryUpdateAsync(DeliveryUpdate update, CancellationToken cancellationToken)
+    {
+        var message = await db.Messages.FirstOrDefaultAsync(m => m.ProviderMessageId == update.ProviderMessageId, cancellationToken)
+            ?? throw new InvalidOperationException("Delivery status for an unknown message id.");
+
+        var current = message.DeliveryStatus ?? DeliveryStatus.Pending;
+        var apply = update.Status == DeliveryStatus.Failed
+            ? current is DeliveryStatus.Pending or DeliveryStatus.Sent
+            : current != DeliveryStatus.Failed && Rank(update.Status) > Rank(current);
+        if (!apply)
+        {
+            return;
+        }
+
+        message.DeliveryStatus = update.Status;
+        message.DeliveryStatusAt = update.At;
+        if (update.Error is not null)
+        {
+            message.DeliveryError = Truncate(update.Error, 300);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        static int Rank(DeliveryStatus status) => status switch
+        {
+            DeliveryStatus.Pending => 0,
+            DeliveryStatus.Sent => 1,
+            DeliveryStatus.Delivered => 2,
+            DeliveryStatus.Read => 3,
+            _ => -1,
+        };
     }
 
     private async Task WithConcurrencyRetryAsync(Func<Task> action, CancellationToken cancellationToken)

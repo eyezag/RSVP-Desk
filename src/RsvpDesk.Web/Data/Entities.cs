@@ -56,6 +56,9 @@ public sealed class Guest
     /// <summary>E.164, unique per event. Never log this in full.</summary>
     public required string PhoneE164 { get; set; }
 
+    /// <summary>WhatsApp's business-scoped user id, learnt from the first message (docs/whatsapp-integration.md §3).</summary>
+    public string? WhatsAppUserId { get; set; }
+
     public DateTimeOffset? ConsentAt { get; set; }
     public string? ConsentSource { get; set; }
     public DateTimeOffset? OptedOutAt { get; set; }
@@ -151,6 +154,11 @@ public sealed class Message
 
     /// <summary>Outbound only.</summary>
     public DeliveryStatus? DeliveryStatus { get; set; }
+
+    public DateTimeOffset? DeliveryStatusAt { get; set; }
+
+    /// <summary>Provider error code and title when sending or delivery failed.</summary>
+    public string? DeliveryError { get; set; }
 }
 
 /// <summary>Raw inbound event, stored before any processing (spec section 7).</summary>

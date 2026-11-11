@@ -115,6 +115,10 @@
                                 @if (m.DeliveryStatus is { } ds) { <span> · @ds</span> }
                             </div>
                         </div>
+                        @if (m.DeliveryError is not null)
+                        {
+                            <div class="field-error">Not delivered: @m.DeliveryError</div>
+                        }
                         @if (m.ChoiceTitles.Count > 0)
                         {
                             <div class="choice-summary">Options: @string.Join(" · ", m.ChoiceTitles)</div>

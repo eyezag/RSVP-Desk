@@ -35,6 +35,11 @@ public sealed partial class MessageRenderer
 
     public string ListButtonTitle => _catalog.Message(MessageKeys.ListButton);
 
+    public string ListSectionTitle => _catalog.Message(MessageKeys.ListSectionTitle);
+
+    /// <summary>The event date as the catalog formats it in messages, e.g. "Saturday 5 December 2026 at 18:00".</summary>
+    public string FormatDate(DateTimeOffset value) => value.ToString(_catalog.DateFormat, _catalog.Culture);
+
     public string DietaryLabel(Dietary dietary) => _catalog.OptionLabel(OptionIds.ForDietary(dietary));
 
     public string RenderPart(MessagePart part) => Fill(_catalog.Message(part.Key), part.Args);

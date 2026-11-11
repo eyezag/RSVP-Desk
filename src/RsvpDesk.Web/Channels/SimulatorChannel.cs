@@ -17,7 +17,7 @@ public sealed class SimulatorChannel : IChannel
 
     public string Source => SourceName;
 
-    public IReadOnlyList<NormalisedInbound> Normalise(string rawJson)
+    public IReadOnlyList<ChannelEvent> Normalise(string rawJson)
     {
         var e = JsonSerializer.Deserialize<SimulatorInboundEvent>(rawJson, Json)
             ?? throw new FormatException("Empty simulator event.");
@@ -38,7 +38,8 @@ public sealed class ChannelRegistry(IEnumerable<IChannel> channels, Microsoft.Ex
     public IChannel Active => Mode switch
     {
         ChannelMode.Simulator => _bySource[SimulatorChannel.SourceName],
-        _ => throw new NotSupportedException($"Channel mode {Mode} is not available yet (build step 7)."),
+        ChannelMode.WhatsApp => _bySource[WhatsApp.WhatsAppCloudChannel.SourceName],
+        _ => throw new NotSupportedException($"Unknown channel mode {Mode}."),
     };
 
     public IChannel ForSource(string source) =>

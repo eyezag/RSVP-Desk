@@ -12,7 +12,7 @@ namespace RsvpDesk.Web.Pages.Guests;
 
 public class DetailsModel(RsvpDbContext db, GuestCommands commands, AuditLog audit, Conversations.ConversationService conversations) : PageModel
 {
-    public sealed record MessageView(MessageDirection Direction, string Body, string? ReplyId, DateTimeOffset SentAt, DeliveryStatus? DeliveryStatus, IReadOnlyList<string> ChoiceTitles);
+    public sealed record MessageView(MessageDirection Direction, string Body, string? ReplyId, DateTimeOffset SentAt, DeliveryStatus? DeliveryStatus, IReadOnlyList<string> ChoiceTitles, string? DeliveryError);
 
     [BindProperty(SupportsGet = true)]
     public int Id { get; set; }
@@ -42,7 +42,8 @@ public class DetailsModel(RsvpDbContext db, GuestCommands commands, AuditLog aud
                 m.ReplyId,
                 m.SentAt,
                 m.DeliveryStatus,
-                m.ChoicesJson is null ? [] : (JsonSerializer.Deserialize<List<RenderedChoice>>(m.ChoicesJson, SimulatorChannel.Json) ?? []).Select(c => c.Title).ToList())).ToList();
+                m.ChoicesJson is null ? [] : (JsonSerializer.Deserialize<List<RenderedChoice>>(m.ChoicesJson, SimulatorChannel.Json) ?? []).Select(c => c.Title).ToList(),
+                m.DeliveryError)).ToList();
             await audit.WriteAsync(User.UserId(), "GuestViewed", $"guest:{Id}", ct);
         }
 

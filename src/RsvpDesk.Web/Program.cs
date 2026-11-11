@@ -11,6 +11,7 @@ using RsvpDesk.Web.Channels;
 using RsvpDesk.Web.Conversations;
 using RsvpDesk.Web.Data;
 using RsvpDesk.Web.Guests;
+using RsvpDesk.Web.WhatsApp;
 
 // The runtime container image has no curl, so the Docker HEALTHCHECK calls the
 // app itself in a lightweight probe mode.
@@ -80,9 +81,19 @@ builder.Services.AddScoped<UserService>();
 builder.Services.Configure<ChannelOptions>(builder.Configuration.GetSection(ChannelOptions.SectionName));
 builder.Services.Configure<DemoOptions>(builder.Configuration.GetSection(DemoOptions.SectionName));
 var channelMode = builder.Configuration.GetSection(ChannelOptions.SectionName).Get<ChannelOptions>()?.Mode ?? ChannelMode.Simulator;
-if (channelMode != ChannelMode.Simulator)
+builder.Services.Configure<WhatsAppOptions>(builder.Configuration.GetSection(WhatsAppOptions.SectionName));
+builder.Services.AddSingleton<IChannel, SimulatorChannel>();
+if (channelMode == ChannelMode.WhatsApp)
 {
-    throw new NotSupportedException($"Channel:Mode={channelMode} is not implemented yet (build step 7). Use Simulator.");
+    var missing = (builder.Configuration.GetSection(WhatsAppOptions.SectionName).Get<WhatsAppOptions>() ?? new WhatsAppOptions()).MissingSettings().ToList();
+    if (missing.Count > 0)
+    {
+        // Names only, never values.
+        throw new InvalidOperationException($"Channel:Mode=WhatsApp needs these settings: {string.Join(", ", missing)}. See docs/whatsapp-integration.md.");
+    }
+
+    builder.Services.AddHttpClient<WhatsAppCloudChannel>(c => c.Timeout = TimeSpan.FromSeconds(20));
+    builder.Services.AddTransient<IChannel>(sp => sp.GetRequiredService<WhatsAppCloudChannel>());
 }
 
 // ---- Conversation pipeline: pure engine + persistence + channel + background worker ----
@@ -90,8 +101,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton(MessageCatalog.English);
 builder.Services.AddSingleton<ConversationEngine>();
 builder.Services.AddSingleton<MessageRenderer>();
-builder.Services.AddSingleton<IChannel, SimulatorChannel>();
-builder.Services.AddSingleton<ChannelRegistry>();
+builder.Services.AddScoped<ChannelRegistry>();
 builder.Services.AddSingleton<InboundQueue>();
 builder.Services.AddSingleton<ProcessingNotifier>();
 builder.Services.AddScoped<ConversationService>();
@@ -140,6 +150,10 @@ app.MapOutreachApi();
 if (channelMode == ChannelMode.Simulator)
 {
     app.MapSimulatorApi();
+}
+else
+{
+    app.MapWhatsAppWebhook();
 }
 
 await app.MigrateRsvpDatabaseAsync();

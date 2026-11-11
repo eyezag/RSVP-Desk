@@ -11,7 +11,7 @@ namespace RsvpDesk.Web.Tests;
 /// Runs the app against a throwaway database per factory instance: SQLite by default, or
 /// PostgreSQL when RSVP_TEST_DB=Postgres and RSVP_TEST_POSTGRES holds a connection string (CI runs both).
 /// </summary>
-public sealed class RsvpWebFactory : WebApplicationFactory<Program>
+public class RsvpWebFactory : WebApplicationFactory<Program>
 {
     public const string OrganiserEmail = "organiser@test.example";
     public const string Password = "correct-horse-battery";
@@ -56,6 +56,13 @@ public sealed class RsvpWebFactory : WebApplicationFactory<Program>
             builder.UseSetting("Database:Provider", "Sqlite");
             builder.UseSetting("ConnectionStrings:Rsvp", $"Data Source={_sqlitePath};Pooling=False");
         }
+
+        ConfigureMore(builder);
+    }
+
+    /// <summary>Lets a derived factory change settings or services (e.g. live WhatsApp mode).</summary>
+    protected virtual void ConfigureMore(IWebHostBuilder builder)
+    {
     }
 
     protected override void Dispose(bool disposing)

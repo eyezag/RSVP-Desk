@@ -36,6 +36,7 @@ public static class MessageKeys
     public const string DietSummarySeparator = "diet_summary_separator";
     public const string NumberOption = "number_option";
     public const string ListButton = "list_button";
+    public const string ListSectionTitle = "list_section_title";
 }
 
 /// <summary>Stable ids for tappable options. These are sent to WhatsApp as button and list row ids.</summary>
@@ -57,6 +58,12 @@ public static class OptionIds
     public const string NoteSkip = "note.skip";
 
     public const string Change = "change";
+
+    /// <summary>
+    /// "Carry on": repeat the current question. Sent by a reminder template's Continue button
+    /// (docs/templates.md). Never offered as a choice inside the conversation.
+    /// </summary>
+    public const string Resume = "resume";
 
     /// <summary>Prefix for party size options: <c>party.1</c> to <c>party.{max}</c>.</summary>
     public const string PartyPrefix = "party.";
@@ -81,7 +88,7 @@ public static class OptionIds
 
     /// <summary>Every fixed (non-numeric) option id, for catalog completeness checks.</summary>
     public static IEnumerable<string> AllFixed() =>
-        AttendOptions.Concat(WheelchairOptions).Concat(DietOptions.Select(o => o.Id)).Append(NoteSkip).Append(Change);
+        AttendOptions.Concat(WheelchairOptions).Concat(DietOptions.Select(o => o.Id)).Append(NoteSkip).Append(Change).Append(Resume);
 }
 
 public static class Keywords

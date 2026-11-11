@@ -23,6 +23,8 @@ internal sealed class GuestConfiguration : IEntityTypeConfiguration<Guest>
         b.Property(g => g.Status).HasConversion<string>().HasMaxLength(16);
         b.HasIndex(g => new { g.EventId, g.PhoneE164 }).IsUnique();
         b.HasIndex(g => new { g.EventId, g.Status });
+        b.Property(g => g.WhatsAppUserId).HasMaxLength(128);
+        b.HasIndex(g => g.WhatsAppUserId);
         b.HasOne(g => g.Event).WithMany(e => e.Guests).HasForeignKey(g => g.EventId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(g => g.Conversation).WithOne().HasForeignKey<Conversation>(c => c.GuestId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(g => g.Rsvp).WithOne().HasForeignKey<Rsvp>(r => r.GuestId).OnDelete(DeleteBehavior.Cascade);
@@ -71,6 +73,7 @@ internal sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
         b.Property(m => m.Body).HasMaxLength(4096);
         b.Property(m => m.ReplyId).HasMaxLength(256);
         b.Property(m => m.ProviderMessageId).HasMaxLength(256);
+        b.Property(m => m.DeliveryError).HasMaxLength(300);
         b.HasIndex(m => m.ProviderMessageId).IsUnique();
         b.HasIndex(m => new { m.GuestId, m.Id });
     }

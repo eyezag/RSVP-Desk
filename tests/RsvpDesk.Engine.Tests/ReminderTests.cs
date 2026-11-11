@@ -50,3 +50,40 @@ public sealed class ReminderTests
         Assert.Equal(Step.Diet, Send(state, Text("2")).State.Step);
     }
 }
+
+public sealed class ResumeTests
+{
+    [Theory]
+    [InlineData(Step.Invited, MessageKeys.AttendQuestion)]
+    [InlineData(Step.Party, MessageKeys.PartyQuestion)]
+    [InlineData(Step.DietOther, MessageKeys.DietOtherQuestion)]
+    [InlineData(Step.Note, MessageKeys.NoteQuestion)]
+    public void Continue_repeats_the_current_question_without_counting_as_invalid(Step step, string key)
+    {
+        var from = At(step) with { InvalidStreak = 1 };
+
+        var result = Send(from, Tap(OptionIds.Resume, "Continue"));
+
+        Assert.Equal(step, result.State.Step);
+        Assert.Equal(0, result.State.InvalidStreak);
+        Assert.Equal([key], result.Keys());
+        Assert.Empty(result.Captures);
+    }
+
+    [Fact]
+    public void Continue_after_finishing_restates_the_answer()
+    {
+        var result = Send(At(Step.Confirmed), Tap(OptionIds.Resume, "Continue"));
+
+        Assert.Equal(MessageKeys.AlreadyConfirmed, result.Keys().First());
+    }
+
+    [Fact]
+    public void Typed_continue_in_a_free_text_step_is_just_text()
+    {
+        var result = Send(At(Step.Note), Text("continue"));
+
+        Assert.Equal(Step.Confirmed, result.State.Step);
+        Assert.Equal("continue", result.State.Answers.AccessNote);
+    }
+}

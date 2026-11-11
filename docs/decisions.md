@@ -228,6 +228,37 @@ Header row required; columns `name` and `phone`, optional `consent` (yes/no) and
 ### D-506 Testing with time
 Integration tests replace `TimeProvider` with a fake clock that only moves when a test advances it, so reminder intervals are tested without waiting.
 
+## Step 7: Live WhatsApp mode
+
+Everything about Meta's API is in `docs/whatsapp-integration.md` (with sources) and the templates in `docs/templates.md`. Decisions on top of that:
+
+### D-601 Reading the documentation
+Meta's documentation host was blocked by this project's cloud environment, so a personal environment allowing `developers.facebook.com` was created for the work. The pages were read on 11 November 2026. Two things learnt that changed the design: WhatsApp now identifies users by a business-scoped user ID and may omit the phone number (D-604), and webhooks are retried for up to 7 days.
+
+### D-602 One stored event per message or status
+A webhook POST is verified (HMAC of the raw body, constant-time) before anything is parsed, then split into items: each message keyed by its `wamid`, each status by `status:<wamid>:<status>`. Each item is a `WebhookEvent` with a unique `ExternalId`, so a repeated delivery (or a repeated status) is skipped, and one bad item doesn't block the others. The response is 200 as soon as the items are stored; the worker does the rest.
+
+### D-603 Message formats
+Choosing the format is the channel's job; the engine still only knows options. 0 options: text. 1–3: reply buttons. 4–10: a list with one section. More than 10 (not reachable, since party size is capped at 10): text with a numbered list. Invitations always use the invitation template; reminders use a reminder template unless the guest has written within the last 23.5 hours (a margin inside Meta's 24-hour window).
+
+### D-604 Finding the guest
+By phone number (`from`, normalised to `+digits`), or by the business-scoped user ID stored from an earlier message, because WhatsApp omits the number for users with a username. If the same person is on several events' lists, the guest still in conversation wins, then one who was invited, then the event nearest in time. Unknown senders are recorded as errors on their stored event and get no reply.
+
+### D-605 Template quick replies
+The documentation shows the quick-reply webhook (`type: "button"`, with `payload` and `text`) but not how to set a custom payload when sending, so the app doesn't depend on one: `WhatsApp:QuickReplies` maps button labels to option ids (`Yes` → `attend.yes`, `No` → `attend.no`, `Continue` → `resume`). A new engine option, `resume`, repeats the current question without counting as an invalid answer.
+
+### D-606 Delivery status
+Stored on the outbound `Message` (`DeliveryStatus`, `DeliveryStatusAt`, `DeliveryError`). Statuses only move forward; `failed` only counts before delivery. A status for an unknown message id is recorded as an error on its event (this can happen in the rare race where Meta's callback arrives before the send response is saved).
+
+### D-607 Retries
+Up to 3 attempts with exponential back-off (or `Retry-After`) for 429/5xx, network errors and the rate-limit and temporary error codes; permanent errors (e.g. 131026 undeliverable, 131047 outside the window, 132001 template not approved) fail at once and are shown on the guest's page. Failed sends are not retried later automatically; the organiser can resend the invitation.
+
+### D-608 Configuration and start-up
+`Channel:Mode=WhatsApp` needs `WhatsApp:PhoneNumberId`, `AccessToken`, `AppSecret` and `VerifyToken` (user-secrets or environment variables); the app refuses to start without them and names the missing ones (never their values). In live mode the simulator page and API don't exist and the webhook does.
+
+### D-609 Not verified here
+I could not send a real WhatsApp message from this environment: that needs your Meta app, a test number and your phone (the spec's "done when" for this step). Everything else is tested against payloads taken from the documentation, with Graph API calls answered by a fake. See the README for the setup steps.
+
 ## Open questions
 
 1. D-004: is one migration set per provider acceptable?

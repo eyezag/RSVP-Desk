@@ -172,7 +172,13 @@ namespace RsvpDesk.Web.Data.Migrations.Sqlite
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("WhatsAppUserId")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WhatsAppUserId");
 
                     b.HasIndex("EventId", "PhoneE164")
                         .IsUnique();
@@ -196,9 +202,16 @@ namespace RsvpDesk.Web.Data.Migrations.Sqlite
                     b.Property<string>("ChoicesJson")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DeliveryError")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("DeliveryStatus")
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
+
+                    b.Property<long?>("DeliveryStatusAt")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Direction")
                         .IsRequired()
