@@ -1,0 +1,16 @@
+@page "/Guests/{id:int}/Edit"
+@model RsvpDesk.Web.Pages.Guests.EditModel
+@{
+    ViewData["Title"] = "Edit guest";
+    ViewData["Errors"] = Model.Errors;
+}
+<div class="narrow">
+    <h1>Edit guest</h1>
+    <form method="post">
+        <partial name="/Pages/Events/_GuestForm.cshtml" for="Input" />
+        <div class="button-row">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a class="btn" asp-page="/Guests/Details" asp-route-id="@Model.Id">Cancel</a>
+        </div>
+    </form>
+</div>

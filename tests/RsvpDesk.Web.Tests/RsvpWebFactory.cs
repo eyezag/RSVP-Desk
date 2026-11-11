@@ -10,6 +10,9 @@ namespace RsvpDesk.Web.Tests;
 /// </summary>
 public sealed class RsvpWebFactory : WebApplicationFactory<Program>
 {
+    public const string OrganiserEmail = "organiser@test.example";
+    public const string Password = "correct-horse-battery";
+
     private readonly string? _sqlitePath;
     private readonly string? _postgresConnection;
 
@@ -33,6 +36,9 @@ public sealed class RsvpWebFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.UseSetting("Database:MigrateOnStartup", "true");
         builder.UseSetting("Demo:SeedSampleEvent", "true");
+        builder.UseSetting("Auth:InitialOrganiser:Email", OrganiserEmail);
+        builder.UseSetting("Auth:InitialOrganiser:Password", Password);
+        builder.UseSetting("Auth:LoginRateLimitPerMinute", "10000");
         if (_postgresConnection is not null)
         {
             builder.UseSetting("Database:Provider", "Postgres");

@@ -14,7 +14,10 @@ public abstract class SimulatorTestBase(RsvpWebFactory factory) : IClassFixture<
 
     protected RsvpWebFactory Factory { get; } = factory;
 
+    /// <summary>Plays the guest's phone; the simulator API needs no login.</summary>
     protected HttpClient Client { get; } = factory.CreateClient();
+
+    private HttpClient? _staff;
 
     protected async Task<T> WithDbAsync<T>(Func<RsvpDbContext, Task<T>> action)
     {
@@ -25,7 +28,7 @@ public abstract class SimulatorTestBase(RsvpWebFactory factory) : IClassFixture<
     /// <summary>A fresh guest on the sample event, so tests never share conversation state.</summary>
     protected Task<int> CreateGuestAsync(bool consent = true) => WithDbAsync(async db =>
     {
-        var ev = await db.Events.SingleAsync(e => e.IsSample);
+        var ev = await db.Events.SingleAsync(e => e.Name == DemoSeeder.SampleEventName);
         var guest = new Guest
         {
             EventId = ev.Id,
@@ -54,6 +57,10 @@ public abstract class SimulatorTestBase(RsvpWebFactory factory) : IClassFixture<
         return body;
     }
 
-    protected async Task<GuestDetailDto> GetGuestAsync(int guestId) =>
-        (await Client.GetFromJsonAsync<GuestDetailDto>($"/api/guests/{guestId}"))!;
+    /// <summary>Reads the guest through the staff API, signed in as an organiser.</summary>
+    protected async Task<GuestDetailDto> GetGuestAsync(int guestId)
+    {
+        _staff ??= await Factory.SignedInClientAsync();
+        return (await _staff.GetFromJsonAsync<GuestDetailDto>($"/api/guests/{guestId}"))!;
+    }
 }

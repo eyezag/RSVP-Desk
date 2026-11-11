@@ -22,6 +22,39 @@ namespace RsvpDesk.Web.Data.Migrations.Postgres
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("RsvpDesk.Web.Data.AuditEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Target")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("At");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLog", (string)null);
+                });
+
             modelBuilder.Entity("RsvpDesk.Web.Data.Conversation", b =>
                 {
                     b.Property<int>("GuestId")
@@ -74,6 +107,9 @@ namespace RsvpDesk.Web.Data.Migrations.Postgres
                         .HasColumnType("character varying(200)");
 
                     b.Property<int>("PartyMax")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReminderAfterDays")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("StartsAt")
@@ -255,6 +291,49 @@ namespace RsvpDesk.Web.Data.Migrations.Postgres
                     b.ToTable("RsvpPersons");
                 });
 
+            modelBuilder.Entity("RsvpDesk.Web.Data.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("RsvpDesk.Web.Data.WebhookEvent", b =>
                 {
                     b.Property<long>("Id")
@@ -294,6 +373,14 @@ namespace RsvpDesk.Web.Data.Migrations.Postgres
                     b.HasIndex("ProcessedAt");
 
                     b.ToTable("WebhookEvents");
+                });
+
+            modelBuilder.Entity("RsvpDesk.Web.Data.AuditEntry", b =>
+                {
+                    b.HasOne("RsvpDesk.Web.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("RsvpDesk.Web.Data.Conversation", b =>

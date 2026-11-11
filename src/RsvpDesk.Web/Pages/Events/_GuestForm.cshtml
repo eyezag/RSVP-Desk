@@ -1,0 +1,23 @@
+@model RsvpDesk.Web.Pages.Events.GuestForm
+@{
+    var errors = (IReadOnlyDictionary<string, string>?)ViewData["Errors"] ?? new Dictionary<string, string>();
+    string? Err(string key) => errors.TryGetValue(key, out var e) ? e : null;
+}
+<div class="form">
+    <label asp-for="Name">Name</label>
+    <input asp-for="Name" class="field" maxlength="200" required />
+    @if (Err("Name") is { } e1) { <p class="field-error">@e1</p> }
+
+    <label asp-for="Phone">Mobile number (WhatsApp)</label>
+    <input asp-for="Phone" class="field" inputmode="tel" placeholder="+27 82 123 4567" required />
+    @if (Err("Phone") is { } e2) { <p class="field-error">@e2</p> }
+
+    <label class="check">
+        <input asp-for="Consent" type="checkbox" />
+        The guest agreed to receive WhatsApp messages about this event
+    </label>
+    <label asp-for="ConsentSource">How consent was given</label>
+    <input asp-for="ConsentSource" class="field" maxlength="200" placeholder="e.g. Registration form, 3 Nov 2026" />
+    @if (Err("ConsentSource") is { } e3) { <p class="field-error">@e3</p> }
+    <p class="muted small">Guests without recorded consent are never messaged (POPIA).</p>
+</div>

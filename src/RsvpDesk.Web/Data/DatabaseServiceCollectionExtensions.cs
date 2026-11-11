@@ -59,4 +59,23 @@ public static class DatabaseServiceCollectionExtensions
         var db = scope.ServiceProvider.GetRequiredService<RsvpDbContext>();
         await DemoSeeder.SeedAsync(db, scope.ServiceProvider.GetRequiredService<TimeProvider>());
     }
+
+    /// <summary>Creates the first organiser from configuration when there are no users yet.</summary>
+    public static async Task SeedInitialOrganiserAsync(this WebApplication app)
+    {
+        var initial = app.Configuration.GetSection(Auth.AuthOptions.SectionName).Get<Auth.AuthOptions>()?.InitialOrganiser;
+        if (string.IsNullOrWhiteSpace(initial?.Email) || string.IsNullOrEmpty(initial.Password))
+        {
+            return;
+        }
+
+        await using var scope = app.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<RsvpDbContext>();
+        if (await db.Users.AnyAsync())
+        {
+            return;
+        }
+
+        await scope.ServiceProvider.GetRequiredService<Auth.UserService>().CreateAsync(initial.Email, initial.Password, UserRole.Organiser, CancellationToken.None);
+    }
 }

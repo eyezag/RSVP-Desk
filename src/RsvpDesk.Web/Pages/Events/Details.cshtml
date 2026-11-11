@@ -1,0 +1,144 @@
+@page "/Events/{id:int}"
+@model RsvpDesk.Web.Pages.Events.DetailsModel
+@using RsvpDesk.Web.Guests
+@{
+    ViewData["Title"] = Model.Event.Name;
+    var s = Model.Summary;
+    var organiser = User.IsOrganiser();
+}
+
+<div class="page-header">
+    <div>
+        <h1>@Model.Event.Name</h1>
+        <p class="muted">
+            @Display.LocalTime(Model.Event.StartsAt, Model.Event.TimeZoneId) · @Model.Event.Venue
+            @if (Model.Event.IsSample) { <span class="tag">Sample, fictional</span> }
+        </p>
+    </div>
+    @if (organiser)
+    {
+        <div class="button-row tight">
+            <a class="btn" asp-page="/Events/Edit" asp-route-id="@Model.Event.Id">Edit event</a>
+        </div>
+    }
+</div>
+
+@if (TempData["Flash"] is string flash)
+{
+    <p class="callout" role="status">@flash</p>
+}
+
+<section class="tiles" aria-label="Summary">
+    <div class="tile">
+        <div class="tile-label">Headcount</div>
+        <div class="tile-value">@s.Headcount <span class="tile-of">/ @s.Capacity</span></div>
+        <div class="meter" role="img" aria-label="@Display.Percent(s.Headcount, s.Capacity) of capacity"><span style="width:@Math.Min(100, s.Capacity == 0 ? 0 : s.Headcount * 100 / s.Capacity)%"></span></div>
+    </div>
+    <div class="tile"><div class="tile-label">Attending parties</div><div class="tile-value">@s.AttendingParties</div></div>
+    <div class="tile"><div class="tile-label">Awaiting reply</div><div class="tile-value">@s.AwaitingReply</div></div>
+    <div class="tile"><div class="tile-label">Declined</div><div class="tile-value">@s.Declined</div></div>
+    @if (organiser)
+    {
+        <div class="tile"><div class="tile-label">Wheelchair users</div><div class="tile-value">@s.WheelchairUsers</div></div>
+    }
+    <div class="tile @(s.NeedsAttention > 0 ? "tile-alert" : "")">
+        <div class="tile-label">Needs attention</div>
+        <div class="tile-value"><a asp-route-status="@GuestFilters.Attention">@s.NeedsAttention</a></div>
+    </div>
+</section>
+<p class="muted small">Headcount and wheelchair users count confirmed attending guests only. @s.NotInvited not invited yet, @s.OptedOut opted out.</p>
+
+<section aria-labelledby="guests-heading">
+    <div class="page-header">
+        <h2 id="guests-heading">Guests <span class="muted">(@Model.Guests.Total)</span></h2>
+        @if (organiser)
+        {
+            <div class="button-row tight">
+                <a class="btn btn-primary" asp-page="/Events/AddGuest" asp-route-id="@Model.Event.Id">Add guest</a>
+            </div>
+        }
+    </div>
+
+    <form method="get" class="filters" role="search">
+        <label for="status" class="visually-hidden">Status</label>
+        <select id="status" name="status" class="field">
+            @foreach (var (value, label) in GuestFilters.Options)
+            {
+                <option value="@value" selected="@(value == (Model.Status ?? ""))">@label</option>
+            }
+        </select>
+        <label for="q" class="visually-hidden">Search by name or number</label>
+        <input id="q" name="q" value="@Model.Q" placeholder="Search name or number" class="field" />
+        <button type="submit" class="btn">Filter</button>
+        @if (!string.IsNullOrEmpty(Model.Status) || !string.IsNullOrEmpty(Model.Q))
+        {
+            <a asp-route-status="" asp-route-q="" class="btn">Clear</a>
+        }
+    </form>
+
+    @if (Model.Guests.Rows.Count == 0)
+    {
+        <p class="muted">No guests match.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="num">Party</th>
+                        @if (organiser)
+                        {
+                            <th scope="col">Dietary</th>
+                            <th scope="col">Access</th>
+                        }
+                        <th scope="col">Last activity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var g in Model.Guests.Rows)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-page="/Guests/Details" asp-route-id="@g.Id">@g.Name</a>
+                                @if (g.NeedsAttention) { <span class="flag flag-attention" title="Asked for help">Needs attention</span> }
+                                @if (g.OptedOut) { <span class="flag" title="Replied STOP">Opted out</span> }
+                                @if (!g.HasConsent) { <span class="flag" title="No consent recorded">No consent</span> }
+                            </td>
+                            <td class="nowrap">@g.Phone</td>
+                            <td><span class="@Display.StatusCss(g.Status)">@Display.StatusLabel(g.Status)</span></td>
+                            <td class="num">@(g.PartySize?.ToString() ?? "–")</td>
+                            @if (organiser)
+                            {
+                                <td>@Display.DietSummary(g.Diets)</td>
+                                <td>
+                                    @if (g.WheelchairUsers > 0) { <span title="Wheelchair users">♿ @g.WheelchairUsers</span> }
+                                    @if (g.HasAccessNote) { <span title="Has an access note">📝</span> }
+                                </td>
+                            }
+                            <td class="nowrap">@Display.LocalTime(g.LastActivityAt, Model.Event.TimeZoneId, "d MMM, HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.Guests.PageCount > 1)
+        {
+            <nav class="pager" aria-label="Pages">
+                @if (Model.Guests.Page > 1)
+                {
+                    <a class="btn" asp-route-p="@(Model.Guests.Page - 1)" asp-route-status="@Model.Status" asp-route-q="@Model.Q">Previous</a>
+                }
+                <span>Page @Model.Guests.Page of @Model.Guests.PageCount</span>
+                @if (Model.Guests.Page < Model.Guests.PageCount)
+                {
+                    <a class="btn" asp-route-p="@(Model.Guests.Page + 1)" asp-route-status="@Model.Status" asp-route-q="@Model.Q">Next</a>
+                }
+            </nav>
+        }
+    }
+</section>

@@ -4,12 +4,16 @@
     ViewData["Title"] = "Home";
 }
 
-<h1>RSVP Desk</h1>
-<p>
-    Event invitations and RSVPs over a WhatsApp-style chatbot, with a dashboard
-    for catering and access planning.
-</p>
-<p class="muted">
-    Try the <a asp-page="/Simulator">guest simulator</a>: pick a fictional guest, send the invitation and RSVP as them.
-    The organiser dashboard arrives in the next build step. Service health: <a href="/health">/health</a>.
-</p>
+<div class="hero">
+    <h1>RSVP Desk</h1>
+    <p class="lead">
+        Event invitations and RSVPs over a WhatsApp chatbot. Guests say whether they're coming, how many
+        people, a dietary requirement for each person and any access needs. Organisers see live numbers,
+        a catering report and an access report.
+    </p>
+    <div class="button-row">
+        <a class="btn btn-primary" asp-page="/Simulator">Try the guest simulator</a>
+        <a class="btn" asp-page="/Events/Index">Open the dashboard</a>
+    </div>
+    <p class="muted small">Everything here is fictional demo data. Service health: <a href="/health">/health</a>.</p>
+</div>

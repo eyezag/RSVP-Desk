@@ -86,3 +86,26 @@ internal sealed class WebhookEventConfiguration : IEntityTypeConfiguration<Webho
         b.HasIndex(e => e.ProcessedAt);
     }
 }
+
+internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
+{
+    public void Configure(EntityTypeBuilder<User> b)
+    {
+        b.Property(u => u.Email).HasMaxLength(254);
+        b.Property(u => u.PasswordHash).HasMaxLength(512);
+        b.Property(u => u.Role).HasConversion<string>().HasMaxLength(16);
+        b.HasIndex(u => u.Email).IsUnique();
+    }
+}
+
+internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEntry>
+{
+    public void Configure(EntityTypeBuilder<AuditEntry> b)
+    {
+        b.ToTable("AuditLog");
+        b.Property(a => a.Action).HasMaxLength(64);
+        b.Property(a => a.Target).HasMaxLength(300);
+        b.HasIndex(a => a.At);
+        b.HasOne<User>().WithMany().HasForeignKey(a => a.UserId).OnDelete(DeleteBehavior.SetNull);
+    }
+}

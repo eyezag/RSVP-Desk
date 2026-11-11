@@ -1,3 +1,10 @@
+@using Microsoft.Extensions.Options
+@using RsvpDesk.Web.Channels
+@inject IOptions<ChannelOptions> ChannelOptions
+@{
+    var simulator = ChannelOptions.Value.Mode == ChannelMode.Simulator;
+    var signedIn = User.Identity?.IsAuthenticated == true;
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,14 +14,33 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="topbar">
         <a class="brand" asp-page="/Index">RSVP Desk</a>
         <nav class="nav" aria-label="Main">
-            <a asp-page="/Simulator">Simulator</a>
-            <span class="mode-badge" title="Channel mode">Simulator mode</span>
+            @if (signedIn)
+            {
+                <a asp-page="/Events/Index">Events</a>
+            }
+            @if (simulator)
+            {
+                <a asp-page="/Simulator">Simulator</a>
+            }
+            <span class="mode-badge @(simulator ? "" : "mode-live")" title="Channel mode">@(simulator ? "Simulator mode" : "Live WhatsApp")</span>
+            @if (signedIn)
+            {
+                <span class="user-chip" title="@User.Identity!.Name">@(User.IsOrganiser() ? "Organiser" : "Viewer")</span>
+                <form method="post" asp-page="/Account/Logout" class="inline-form">
+                    <button type="submit" class="link-button">Sign out</button>
+                </form>
+            }
+            else
+            {
+                <a asp-page="/Account/Login">Sign in</a>
+            }
         </nav>
     </header>
-    <main class="page">
+    <main class="page" id="main">
         @RenderBody()
     </main>
     <footer class="footer">

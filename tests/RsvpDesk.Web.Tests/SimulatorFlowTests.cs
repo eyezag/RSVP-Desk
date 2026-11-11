@@ -84,7 +84,7 @@ public sealed class SimulatorFlowTests(RsvpWebFactory factory) : SimulatorTestBa
         Assert.Equal("Invited", restarted.Step);
         Assert.Null(restarted.Answers.Attending);
         Assert.Null(restarted.Answers.PartySize);
-        Assert.Empty(restarted.Answers.Diets);
+        Assert.Empty(restarted.Answers.Diets!);
         Assert.Null(restarted.Answers.ConfirmedAt);
 
         await SayAsync(id, "no");
@@ -191,7 +191,8 @@ public sealed class SimulatorFlowTests(RsvpWebFactory factory) : SimulatorTestBa
         var response = await Client.PostAsJsonAsync("/api/simulator/999999/messages", new SimulatorMessageRequest(null, "hi", null));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync("/api/guests/999999")).StatusCode);
+        var staff = await Factory.SignedInClientAsync();
+        Assert.Equal(HttpStatusCode.NotFound, (await staff.GetAsync("/api/guests/999999")).StatusCode);
     }
 
     [Fact]
@@ -199,7 +200,7 @@ public sealed class SimulatorFlowTests(RsvpWebFactory factory) : SimulatorTestBa
     {
         var guests = await Client.GetFromJsonAsync<List<SimulatorGuestDto>>("/api/simulator/guests");
         var (ev, seeded) = await WithDbAsync(async db =>
-            (await db.Events.SingleAsync(e => e.IsSample), await db.Guests.Where(g => g.PhoneE164.StartsWith("+2700000")).ToListAsync()));
+            (await db.Events.SingleAsync(e => e.Name == DemoSeeder.SampleEventName), await db.Guests.Where(g => g.PhoneE164.StartsWith("+2700000")).ToListAsync()));
 
         Assert.Equal("Year-End Function 2026", ev.Name);
         Assert.Equal(new DateTimeOffset(2026, 12, 5, 18, 0, 0, TimeSpan.FromHours(2)), ev.LocalStartsAt());

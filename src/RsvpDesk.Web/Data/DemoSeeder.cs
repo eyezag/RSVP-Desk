@@ -8,6 +8,12 @@ public sealed class DemoOptions
 
     /// <summary>Create the fictional sample event and guests when the database has no events.</summary>
     public bool SeedSampleEvent { get; set; } = true;
+
+    /// <summary>
+    /// Show the initial organiser's credentials on the sign-in page, so visitors to the public demo
+    /// can look around. Ignored in live WhatsApp mode.
+    /// </summary>
+    public bool ShowLoginHint { get; set; }
 }
 
 /// <summary>

@@ -1,0 +1,121 @@
+@page "/Guests/{id:int}"
+@model RsvpDesk.Web.Pages.Guests.DetailsModel
+@using RsvpDesk.Engine
+@{
+    ViewData["Title"] = Model.Guest.Name;
+    var g = Model.Guest;
+    var rsvp = g.Rsvp;
+    var tz = g.Event.TimeZoneId;
+    var organiser = User.IsOrganiser();
+}
+
+<p><a asp-page="/Events/Details" asp-route-id="@g.EventId">← @g.Event.Name</a></p>
+
+<div class="page-header">
+    <div>
+        <h1>@g.Name</h1>
+        <p class="muted">@g.PhoneE164 · <span class="@Display.StatusCss(g.Status)">@Display.StatusLabel(g.Status)</span></p>
+    </div>
+    @if (organiser)
+    {
+        <div class="button-row tight">
+            <a class="btn" asp-page="/Guests/Edit" asp-route-id="@g.Id">Edit</a>
+        </div>
+    }
+</div>
+
+@if (TempData["Flash"] is string flash)
+{
+    <p class="callout" role="status">@flash</p>
+}
+
+@if (g.NeedsAttention)
+{
+    <div class="callout callout-alert">
+        <strong>Needs attention.</strong> This guest replied HELP. Contact them, then mark it handled.
+        @if (organiser)
+        {
+            <form method="post" asp-page-handler="Handled" class="inline-form">
+                <button type="submit" class="btn">Mark handled</button>
+            </form>
+        }
+    </div>
+}
+
+@if (g.OptedOutAt is not null)
+{
+    <div class="callout">
+        <strong>Opted out</strong> on @Display.LocalTime(g.OptedOutAt, tz). No messages, invitations or reminders are sent.
+        @if (organiser)
+        {
+            <form method="post" asp-page-handler="Reenable" class="inline-form">
+                <button type="submit" class="btn">Re-enable messages</button>
+            </form>
+        }
+    </div>
+}
+
+<div class="detail-layout">
+    <section class="sim-panel" aria-labelledby="answers-heading">
+        <h2 id="answers-heading">Answers</h2>
+        <dl class="facts">
+            <dt>Status</dt><dd>@Display.StatusLabel(g.Status) (step: @(g.Conversation?.State.ToString() ?? "NotInvited"))</dd>
+            <dt>Attending</dt><dd>@(rsvp?.Attending switch { true => "Yes", false => "No", null => "–" })</dd>
+            <dt>Party size</dt><dd>@(rsvp?.PartySize?.ToString() ?? "–")</dd>
+            @if (organiser)
+            {
+                <dt>Dietary</dt>
+                <dd>
+                    @if (rsvp is null || rsvp.Persons.Count == 0) { <text>–</text> }
+                    else
+                    {
+                        <ol class="plain-list">
+                            @foreach (var p in rsvp.Persons.OrderBy(p => p.PersonIndex))
+                            {
+                                <li>@(p.PersonIndex == 1 ? "Guest" : $"Guest {p.PersonIndex}"): @Display.DietaryLabel(p.Dietary)@(p.DietaryNote is null ? "" : $" ({p.DietaryNote})")</li>
+                            }
+                        </ol>
+                    }
+                </dd>
+                <dt>Wheelchair users</dt><dd>@(rsvp?.WheelchairUsers?.ToString() ?? "–")</dd>
+                <dt>Access note</dt><dd>@(rsvp?.AccessNote ?? "–")</dd>
+            }
+            <dt>Finished</dt><dd>@Display.LocalTime(rsvp?.ConfirmedAt, tz)</dd>
+            <dt>Invitation sent</dt><dd>@Display.LocalTime(g.InviteSentAt, tz)</dd>
+            <dt>Consent</dt><dd>@(g.ConsentAt is null ? "Not recorded" : $"{Display.LocalTime(g.ConsentAt, tz)} · {g.ConsentSource}")</dd>
+        </dl>
+        @if (!organiser)
+        {
+            <p class="muted small">Dietary and access answers and the conversation are visible to organisers only.</p>
+        }
+    </section>
+
+    @if (organiser)
+    {
+        <section class="sim-panel" aria-labelledby="chat-heading">
+            <h2 id="chat-heading">Conversation</h2>
+            <div class="chat chat-static">
+                @if (Model.Messages.Count == 0)
+                {
+                    <p class="chat-empty">No messages yet.</p>
+                }
+                @foreach (var m in Model.Messages)
+                {
+                    <div class="bubble-wrap @(m.Direction == MessageDirection.In ? "from-guest" : "from-bot")">
+                        <div class="bubble">
+                            <div class="bubble-text">@(string.IsNullOrEmpty(m.Body) ? $"[{m.ReplyId}]" : m.Body)</div>
+                            <div class="bubble-meta">
+                                @Display.LocalTime(m.SentAt, tz, "d MMM HH:mm")
+                                @if (m.DeliveryStatus is { } ds) { <span> · @ds</span> }
+                            </div>
+                        </div>
+                        @if (m.ChoiceTitles.Count > 0)
+                        {
+                            <div class="choice-summary">Options: @string.Join(" · ", m.ChoiceTitles)</div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    }
+</div>

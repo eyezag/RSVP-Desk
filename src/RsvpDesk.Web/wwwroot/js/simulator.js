@@ -66,7 +66,7 @@
   async function refresh() {
     clearTimeout(pollTimer);
     if (!guestId) return;
-    const { ok, body } = await api(`/api/guests/${guestId}`);
+    const { ok, body } = await api(`/api/simulator/${guestId}`);
     if (ok && body) render(body);
     pollTimer = setTimeout(refresh, POLL_MS);
   }

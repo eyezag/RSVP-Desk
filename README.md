@@ -4,7 +4,7 @@ An event management web app where guests receive an invitation and RSVP through 
 
 This is a portfolio project. Every event and guest in the demo is fictional.
 
-> **Status:** in progress. Build steps 1 to 3 are done: you can RSVP as a fictional guest in the browser simulator and see the answers saved. See [Build progress](#build-progress).
+> **Status:** in progress. Build steps 1 to 4 are done: RSVP as a fictional guest in the simulator, then follow it on the staff dashboard. See [Build progress](#build-progress).
 
 ## Two modes
 
@@ -69,7 +69,7 @@ docker compose up --build
 # http://localhost:8080/Simulator , health at http://localhost:8080/health
 ```
 
-Open **Simulator**, pick a guest, click **Send invitation**, then answer as the guest with the buttons, the list or by typing. The right-hand panel shows what was saved. **Reset guest** starts over.
+The sign-in page shows the demo account. Open **Simulator**, pick a guest, click **Send invitation**, then answer as the guest with the buttons, the list or by typing. The right-hand panel shows what was saved. **Reset guest** starts over.
 
 With the .NET 10 SDK:
 
@@ -102,7 +102,7 @@ Migrations are applied on startup unless `Database__MigrateOnStartup=false`.
 1. [x] Skeleton: solution, Dockerfile, CI, health check, migrations
 2. [x] Conversation engine with table-driven tests
 3. [x] Persistence and simulator mode
-4. [ ] Dashboard
+4. [x] Dashboard
 5. [ ] Reports and CSV exports
 6. [ ] Invitations and reminders
 7. [ ] Live WhatsApp mode

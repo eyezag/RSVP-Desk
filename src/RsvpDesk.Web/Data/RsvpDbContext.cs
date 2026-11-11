@@ -17,6 +17,8 @@ public abstract class RsvpDbContext(DbContextOptions options) : DbContext(option
     public DbSet<RsvpPerson> RsvpPersons => Set<RsvpPerson>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<WebhookEvent> WebhookEvents => Set<WebhookEvent>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<AuditEntry> AuditLog => Set<AuditEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

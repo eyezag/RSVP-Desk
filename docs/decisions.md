@@ -153,9 +153,40 @@ A Razor page with plain JavaScript (`wwwroot/js/simulator.js`). Bot messages wit
 ### D-212 Finding the guest for a live message
 WhatsApp messages carry a phone number, not a guest id. For now the most recent event's guest with that number is used. Step 7 will revisit this, since one person may be on several events' lists.
 
+## Step 4: Dashboard
+
+### D-301 Staff login
+A small `Users` table (email, password hash, role, failed-login count, lock-out time) with ASP.NET Core Identity's `PasswordHasher` and cookie authentication, rather than full ASP.NET Core Identity: the app needs two roles and a login form, nothing more.
+- Cookie: HttpOnly, SameSite=Strict, Secure in Production, 8-hour sliding session.
+- Five wrong passwords lock the account for 15 minutes. Every failure shows the same message, and unknown emails still run a password hash, so the page doesn't reveal which accounts exist.
+- The login page is rate-limited per client IP (20 requests a minute by default, `Auth:LoginRateLimitPerMinute`).
+- All pages and APIs need a signed-in user unless they opt out (a fallback policy). Public: home, simulator page and its API, sign-in, `/health`, static files. Staff APIs answer 401/403 instead of redirecting.
+- Forms carry antiforgery tokens; the return URL after sign-in must be local.
+- Passwords are at least 12 characters.
+
+### D-302 Creating users
+The first organiser comes from configuration (`Auth:InitialOrganiser:Email` / `Password`, via user-secrets or environment variables) and is created only when there are no users. More users: `dotnet RsvpDesk.Web.dll --create-user <email> <Organiser|Viewer>`, with the password in `RSVP_NEW_USER_PASSWORD` or typed in. A user-management page can come later.
+
+### D-303 Demo sign-in
+For the public demo, `Demo:ShowLoginHint=true` shows the initial organiser's credentials on the sign-in page. It is ignored in live WhatsApp mode. `docker compose` turns it on with a demo account; Development uses `organiser@rsvpdesk.example` / `local-dev-password`.
+
+### D-304 Roles
+- **Organiser:** everything.
+- **Viewer:** read-only. Sees the summary tiles (except wheelchair users), the guest table without the dietary and access columns, and guest details without dietary and access answers or the conversation (which repeats them). The API returns those fields as `null`. Dietary and access needs are special personal information under POPIA, so they are limited to the people planning catering and access.
+
+### D-305 Audit log in this step
+The `AuditLog` table arrives now (not in step 8) because logins and guest views should be recorded from the start. Recorded so far: logins and failures, lock-outs, an organiser opening a guest's details, adding and editing guests and events, marking help handled, re-enabling messages. Targets are ids (`guest:12`), never names or numbers.
+
+### D-306 Dashboard behaviour
+- Status filter options: all, each status, "awaiting reply" (invited or in chat), "needs attention", "opted out". Search matches names (case-insensitive) and, when the search has three or more digits, phone numbers. 25 guests per page, sorted by name.
+- Summary tiles count confirmed attending guests only for headcount and wheelchair users, as the catering report will.
+- "Re-enable messages" (organiser only) clears the opt-out. A finished RSVP goes back to Confirmed/Declined; an unfinished one goes back to "not invited" so it can be invited again. Answers already given are kept.
+- Phone numbers are normalised to E.164. A number starting with 0 is read as South African (+27).
+- Events can be created and edited. New fields: reminder interval (used in step 6). Party size is limited to 10, the most a WhatsApp list can show (still to be confirmed, D-106). It can't be lowered below a party size a guest has already given.
+
 ## Open questions
 
 1. D-004: is one migration set per provider acceptable?
 2. D-104: are the behaviour choices above what you want, especially skipping the wheelchair count for a party of one and accepting "2" as the second dietary option?
-3. D-201: `Users` and `AuditLog` are left for steps 4 and 8. Is that fine?
+3. D-304: is hiding dietary and access answers from Viewers what you want?
 4. Section 7 says template approval takes time and should be submitted first. Drafting `docs/templates.md` needs the current Meta documentation, which I plan to read at the start of step 7 unless you want the template drafted sooner so you can submit it early.

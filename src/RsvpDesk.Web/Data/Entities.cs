@@ -18,6 +18,9 @@ public sealed class Event
     public int PartyMax { get; set; } = 4;
     public int DeleteDataAfterDays { get; set; } = 30;
 
+    /// <summary>Reminders go only to guests invited at least this many days ago, and at most this often (step 6).</summary>
+    public int ReminderAfterDays { get; set; } = 3;
+
     /// <summary>Marks the fictional demo event.</summary>
     public bool IsSample { get; set; }
 
@@ -159,4 +162,40 @@ public sealed class WebhookEvent
     public required string RawJson { get; set; }
     public DateTimeOffset? ProcessedAt { get; set; }
     public string? Error { get; set; }
+}
+
+public enum UserRole
+{
+    /// <summary>Full access: sends messages, edits guests, sees dietary and access data, exports.</summary>
+    Organiser,
+
+    /// <summary>Read-only. Does not see dietary or access answers (special personal information).</summary>
+    Viewer,
+}
+
+public sealed class User
+{
+    public int Id { get; set; }
+
+    /// <summary>Stored lower-case.</summary>
+    public required string Email { get; set; }
+
+    public required string PasswordHash { get; set; }
+    public UserRole Role { get; set; }
+    public int FailedLoginCount { get; set; }
+    public DateTimeOffset? LockedUntil { get; set; }
+    public DateTimeOffset? LastLoginAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class AuditEntry
+{
+    public long Id { get; set; }
+
+    /// <summary>Null for actions by the system (e.g. the retention job) or failed logins.</summary>
+    public int? UserId { get; set; }
+
+    public required string Action { get; set; }
+    public required string Target { get; set; }
+    public DateTimeOffset At { get; set; }
 }

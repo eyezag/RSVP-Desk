@@ -1,0 +1,45 @@
+@model RsvpDesk.Web.Guests.EventInput
+@{
+    var errors = (IReadOnlyDictionary<string, string>?)ViewData["Errors"] ?? new Dictionary<string, string>();
+    string? Err(string key) => errors.TryGetValue(key, out var e) ? e : null;
+}
+<div class="form">
+    <label asp-for="Name">Event name</label>
+    <input asp-for="Name" class="field" maxlength="200" required />
+    @if (Err("Name") is { } e1) { <p class="field-error">@e1</p> }
+
+    <label asp-for="StartsAtLocal">Starts (venue's local time)</label>
+    <input asp-for="StartsAtLocal" type="datetime-local" class="field" required />
+
+    <label asp-for="TimeZoneId">Time zone (IANA)</label>
+    <input asp-for="TimeZoneId" class="field" maxlength="64" required />
+    @if (Err("TimeZoneId") is { } e2) { <p class="field-error">@e2</p> }
+
+    <label asp-for="Venue">Venue</label>
+    <input asp-for="Venue" class="field" maxlength="300" required />
+    @if (Err("Venue") is { } e3) { <p class="field-error">@e3</p> }
+
+    <div class="form-grid">
+        <div>
+            <label asp-for="Capacity">Capacity</label>
+            <input asp-for="Capacity" type="number" min="1" class="field" />
+            @if (Err("Capacity") is { } e4) { <p class="field-error">@e4</p> }
+        </div>
+        <div>
+            <label asp-for="PartyMax">Maximum party size</label>
+            <input asp-for="PartyMax" type="number" min="1" max="@RsvpDesk.Web.Guests.EventCommands.MaxPartySize" class="field" />
+            @if (Err("PartyMax") is { } e5) { <p class="field-error">@e5</p> }
+        </div>
+        <div>
+            <label asp-for="ReminderAfterDays">Days before a reminder</label>
+            <input asp-for="ReminderAfterDays" type="number" min="1" max="60" class="field" />
+            @if (Err("ReminderAfterDays") is { } e6) { <p class="field-error">@e6</p> }
+        </div>
+        <div>
+            <label asp-for="DeleteDataAfterDays">Delete guest data after (days)</label>
+            <input asp-for="DeleteDataAfterDays" type="number" min="1" max="3650" class="field" />
+            @if (Err("DeleteDataAfterDays") is { } e7) { <p class="field-error">@e7</p> }
+        </div>
+    </div>
+    <p class="muted small">Guest data is deleted or anonymised this many days after the event (POPIA).</p>
+</div>

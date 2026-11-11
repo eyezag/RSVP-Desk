@@ -1,0 +1,17 @@
+@page "/Events/{id:int}/Guests/Add"
+@model RsvpDesk.Web.Pages.Events.AddGuestModel
+@{
+    ViewData["Title"] = "Add guest";
+    ViewData["Errors"] = Model.Errors;
+}
+<div class="narrow">
+    <h1>Add guest</h1>
+    <p class="muted">to @Model.EventName</p>
+    <form method="post">
+        <partial name="_GuestForm" for="Input" />
+        <div class="button-row">
+            <button type="submit" class="btn btn-primary">Add guest</button>
+            <a class="btn" asp-page="/Events/Details" asp-route-id="@Model.Id">Cancel</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,41 @@
+@page
+@model RsvpDesk.Web.Pages.Events.IndexModel
+@{
+    ViewData["Title"] = "Events";
+}
+
+<div class="page-header">
+    <h1>Events</h1>
+    @if (User.IsOrganiser())
+    {
+        <a class="btn btn-primary" asp-page="/Events/Create">New event</a>
+    }
+</div>
+
+@if (Model.Events.Count == 0)
+{
+    <p class="muted">No events yet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr><th scope="col">Event</th><th scope="col">Date</th><th scope="col">Venue</th><th scope="col" class="num">Guests</th><th scope="col" class="num">Headcount</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var e in Model.Events)
+            {
+                <tr>
+                    <td>
+                        <a asp-page="/Events/Details" asp-route-id="@e.Id">@e.Name</a>
+                        @if (e.IsSample) { <span class="tag">Sample, fictional</span> }
+                    </td>
+                    <td>@Display.LocalTime(e.StartsAt, e.TimeZoneId)</td>
+                    <td>@e.Venue</td>
+                    <td class="num">@e.Guests</td>
+                    <td class="num">@e.Headcount / @e.Capacity</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -32,6 +32,8 @@ public static partial class SimulatorEndpoints
         group.MapGet("/{guestId:int}/messages", GetMessages);
         group.MapPost("/{guestId:int}/invite", Invite);
         group.MapPost("/{guestId:int}/reset", Reset);
+        group.MapGet("/{guestId:int}", GetGuest);
+        group.AllowAnonymous();
         return app;
     }
 
@@ -110,6 +112,17 @@ public static partial class SimulatorEndpoints
         queue.Enqueue(stored.Id);
         var processed = registration is not null && await notifier.WaitAsync(stored.Id, registration, WaitForProcessing, ct);
         return Results.Accepted($"/api/simulator/{guestId}/messages", new SimulatorMessageResponse(stored.Id, processed, Duplicate: false));
+    }
+
+    /// <summary>The guest's chat and saved answers, for the simulator page. Sample (fictional) guests only.</summary>
+    private static async Task<IResult> GetGuest(int guestId, RsvpDbContext db, CancellationToken ct)
+    {
+        if (!await db.Guests.AnyAsync(g => g.Id == guestId && g.Event.IsSample, ct))
+        {
+            return Results.NotFound();
+        }
+
+        return Results.Ok(await GuestEndpoints.BuildDetailAsync(db, guestId, includeSensitive: true, ct));
     }
 
     private static async Task<IResult> GetMessages(int guestId, long? afterId, RsvpDbContext db, CancellationToken ct)

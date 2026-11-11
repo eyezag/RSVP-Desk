@@ -11,6 +11,11 @@ services:
       Channel__Mode: Simulator
       Database__Provider: ${DATABASE_PROVIDER:-Sqlite}
       ConnectionStrings__Rsvp: ${RSVP_CONNECTION_STRING:-Data Source=/data/rsvpdesk.db}
+      # Demo account for the fictional sample data, shown on the sign-in page.
+      # For a real deployment set your own values and DEMO_SHOW_LOGIN_HINT=false.
+      Auth__InitialOrganiser__Email: ${INITIAL_ORGANISER_EMAIL:-demo@rsvpdesk.example}
+      Auth__InitialOrganiser__Password: ${INITIAL_ORGANISER_PASSWORD:-demo-password-2026}
+      Demo__ShowLoginHint: ${DEMO_SHOW_LOGIN_HINT:-true}
     volumes:
       - rsvp-data:/data
 

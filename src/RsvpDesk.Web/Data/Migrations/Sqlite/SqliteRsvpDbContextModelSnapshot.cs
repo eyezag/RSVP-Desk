@@ -16,6 +16,37 @@ namespace RsvpDesk.Web.Data.Migrations.Sqlite
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.15");
 
+            modelBuilder.Entity("RsvpDesk.Web.Data.AuditEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("At")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Target")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("At");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLog", (string)null);
+                });
+
             modelBuilder.Entity("RsvpDesk.Web.Data.Conversation", b =>
                 {
                     b.Property<int>("GuestId")
@@ -66,6 +97,9 @@ namespace RsvpDesk.Web.Data.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<int>("PartyMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ReminderAfterDays")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("StartsAt")
@@ -241,6 +275,47 @@ namespace RsvpDesk.Web.Data.Migrations.Sqlite
                     b.ToTable("RsvpPersons");
                 });
 
+            modelBuilder.Entity("RsvpDesk.Web.Data.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("LastLoginAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("LockedUntil")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("RsvpDesk.Web.Data.WebhookEvent", b =>
                 {
                     b.Property<long>("Id")
@@ -278,6 +353,14 @@ namespace RsvpDesk.Web.Data.Migrations.Sqlite
                     b.HasIndex("ProcessedAt");
 
                     b.ToTable("WebhookEvents");
+                });
+
+            modelBuilder.Entity("RsvpDesk.Web.Data.AuditEntry", b =>
+                {
+                    b.HasOne("RsvpDesk.Web.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("RsvpDesk.Web.Data.Conversation", b =>

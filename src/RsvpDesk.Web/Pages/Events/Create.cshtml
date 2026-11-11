@@ -1,0 +1,16 @@
+@page
+@model RsvpDesk.Web.Pages.Events.CreateModel
+@{
+    ViewData["Title"] = "New event";
+    ViewData["Errors"] = Model.Errors;
+}
+<div class="narrow">
+    <h1>New event</h1>
+    <form method="post">
+        <partial name="_EventForm" for="Input" />
+        <div class="button-row">
+            <button type="submit" class="btn btn-primary">Create event</button>
+            <a class="btn" asp-page="/Events/Index">Cancel</a>
+        </div>
+    </form>
+</div>
