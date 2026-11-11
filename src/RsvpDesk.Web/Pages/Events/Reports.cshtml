@@ -1,0 +1,86 @@
+@page "/Events/{id:int}/Reports"
+@model RsvpDesk.Web.Pages.Events.ReportsModel
+@using RsvpDesk.Engine
+@{
+    ViewData["Title"] = "Catering and access";
+    var r = Model.Report;
+    var maxPeople = Math.Max(1, r.Diets.Max(d => d.People));
+}
+
+<p><a asp-page="/Events/Details" asp-route-id="@Model.Event.Id">← @Model.Event.Name</a></p>
+<div class="page-header">
+    <h1>Catering and access</h1>
+    <div class="button-row tight">
+        <a class="btn" href="/api/events/@Model.Event.Id/export/catering.csv">Download catering summary (CSV)</a>
+        <a class="btn" href="/api/events/@Model.Event.Id/export/guests.csv">Download guest list (CSV)</a>
+    </div>
+</div>
+
+<p class="callout">
+    <strong>Only confirmed attending guests are counted:</strong> @r.ConfirmedParties parties, @r.ConfirmedPeople people.
+    @if (r.InProgressGuests > 0)
+    {
+        <text>@r.InProgressGuests @(r.InProgressGuests == 1 ? "guest is" : "guests are") still answering and not included yet.</text>
+    }
+</p>
+
+<div class="report-grid">
+    <section class="sim-panel" aria-labelledby="diet-heading">
+        <h2 id="diet-heading">Dietary requirements</h2>
+        <table class="table bar-table">
+            <thead><tr><th scope="col">Requirement</th><th scope="col" class="num">People</th><th scope="col" class="num">Share</th><th scope="col"><span class="visually-hidden">Bar</span></th></tr></thead>
+            <tbody>
+                @foreach (var d in r.Diets)
+                {
+                    <tr>
+                        <td>@Display.DietaryLabel(d.Dietary)</td>
+                        <td class="num">@d.People</td>
+                        <td class="num">@d.Share.ToString("P0", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))</td>
+                        <td class="bar-cell"><span class="bar" style="width:@(d.People * 100 / maxPeople)%"></span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <h3>"Other" requirements</h3>
+        @if (r.Others.Count == 0)
+        {
+            <p class="muted">None.</p>
+        }
+        else
+        {
+            <ul class="plain-list spaced">
+                @foreach (var o in r.Others)
+                {
+                    <li><strong>@o.Note</strong>, <a asp-page="/Guests/Details" asp-route-id="@o.GuestId">@o.GuestName</a>@(o.PersonIndex > 1 ? $" (guest {o.PersonIndex})" : "")</li>
+                }
+            </ul>
+        }
+    </section>
+
+    <section class="sim-panel" aria-labelledby="access-heading">
+        <h2 id="access-heading">Access</h2>
+        <p class="tile-value">@r.WheelchairUsers <span class="tile-of">wheelchair @(r.WheelchairUsers == 1 ? "user" : "users")</span></p>
+        @if (r.AccessParties.Count == 0)
+        {
+            <p class="muted">No access needs reported.</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead><tr><th scope="col">Party</th><th scope="col" class="num">Size</th><th scope="col" class="num">Wheelchairs</th><th scope="col">Note</th></tr></thead>
+                <tbody>
+                    @foreach (var p in r.AccessParties)
+                    {
+                        <tr>
+                            <td><a asp-page="/Guests/Details" asp-route-id="@p.GuestId">@p.GuestName</a></td>
+                            <td class="num">@p.PartySize</td>
+                            <td class="num">@p.WheelchairUsers</td>
+                            <td>@(p.AccessNote ?? "–")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+</div>

@@ -101,6 +101,7 @@ builder.Services.AddHostedService<InboundWorker>();
 builder.Services.AddScoped<GuestQueries>();
 builder.Services.AddScoped<GuestCommands>();
 builder.Services.AddScoped<EventCommands>();
+builder.Services.AddScoped<RsvpDesk.Web.Reports.CateringReport>();
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<RsvpDbContext>("database");
@@ -130,6 +131,7 @@ app.MapRazorPages().WithStaticAssets();
 app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthResponse.WriteAsync }).AllowAnonymous();
 
 app.MapGuestApi();
+app.MapExportApi();
 if (channelMode == ChannelMode.Simulator)
 {
     app.MapSimulatorApi();

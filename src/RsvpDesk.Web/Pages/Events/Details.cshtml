@@ -18,6 +18,8 @@
     @if (organiser)
     {
         <div class="button-row tight">
+            <a class="btn" asp-page="/Events/Reports" asp-route-id="@Model.Event.Id">Catering and access report</a>
+            <a class="btn" href="/api/events/@Model.Event.Id/export/guests.csv">Download guest list</a>
             <a class="btn" asp-page="/Events/Edit" asp-route-id="@Model.Event.Id">Edit event</a>
         </div>
     }

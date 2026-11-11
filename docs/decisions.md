@@ -184,6 +184,22 @@ The `AuditLog` table arrives now (not in step 8) because logins and guest views 
 - Phone numbers are normalised to E.164. A number starting with 0 is read as South African (+27).
 - Events can be created and edited. New fields: reminder interval (used in step 6). Party size is limited to 10, the most a WhatsApp list can show (still to be confirmed, D-106). It can't be lowered below a party size a guest has already given.
 
+## Step 5: Reports and CSV
+
+### D-401 What the report counts
+Only guests whose status is Attending (they finished and said yes). Guests still answering are left out, and the page says how many, because their answers can still change. Shares are of people, not parties. Every dietary option is listed, including zeros, so the kitchen sees a complete list.
+
+### D-402 CSV format
+- UTF-8 with a BOM, CRLF line endings, RFC 4180 quoting (cells with a comma, quote, CR or LF are quoted; quotes are doubled).
+- Formula injection: a cell starting with `=`, `+`, `-`, `@`, tab or CR gets a leading `'`. Only the phone column is exempt, and only when it is a plain number (`+27821234567`). An `=` later in a cell is harmless and left alone.
+- Rows are streamed from the database to the response; nothing builds the whole file in memory.
+- Guest list columns: Name, Phone, Status (with "(opted out)"), Party size, Dietary requirements (`1: Vegetarian; 2: Other (nut allergy)`), Wheelchair users, Access note, Last activity (event's local time).
+- Catering summary: one row per requirement with the number of people, details for Other as `note (guest name, guest n)`, and a total row.
+- Files are named after the event, e.g. `year-end-function-2026-guests.csv`, sent with `Cache-Control: no-store`.
+
+### D-403 Access to reports and exports
+Organisers only (D-304). Viewing the report and each export are written to the audit log.
+
 ## Open questions
 
 1. D-004: is one migration set per provider acceptable?

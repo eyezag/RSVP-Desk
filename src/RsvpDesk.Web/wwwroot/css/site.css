@@ -202,3 +202,10 @@ body {
 .topbar { gap: 0.75rem; flex-wrap: wrap; }
 .facts dd .plain-list { white-space: normal; }
 .facts dd .plain-list li { margin: 0; }
+
+/* ---- Reports ---- */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1.25rem; margin-top: 1rem; align-items: start; }
+.bar-table .bar-cell { width: 40%; }
+.bar { display: block; height: 0.8rem; min-width: 2px; background: var(--accent); border-radius: 3px; }
+.spaced li { margin-bottom: 0.35rem; }
+.sim-panel h3 { font-size: 0.95rem; margin: 1.25rem 0 0.5rem; }
