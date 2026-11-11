@@ -41,6 +41,27 @@ public sealed class ConversationEngine
         return new EngineResult(next, [InvitationMessage(ev)], []);
     }
 
+    /// <summary>
+    /// A reminder for a guest who hasn't finished: a short nudge followed by their current question,
+    /// so they can answer straight away. Finished and opted-out guests get nothing. The state does not change.
+    /// </summary>
+    public EngineResult Remind(ConversationState state, EventDetails ev)
+    {
+        ev.Validate();
+        if (state.Step is Step.NotInvited or Step.Confirmed or Step.Declined or Step.OptedOut)
+        {
+            return new EngineResult(state, [], []);
+        }
+
+        var key = state.Step == Step.Invited ? MessageKeys.ReminderNotReplied : MessageKeys.ReminderUnfinished;
+        var prompt = Prompt(state, ev);
+        var message = new OutboundMessage(
+            MessagePurpose.Reminder,
+            [Part(key, ("event", ev.Name), ("date", ev.StartsAt)), .. prompt.Parts],
+            prompt.Choices);
+        return new EngineResult(state with { InvalidStreak = 0 }, [message], []);
+    }
+
     /// <summary>Handles one inbound message from the guest.</summary>
     public EngineResult Handle(ConversationState state, Inbound inbound, EventDetails ev)
     {

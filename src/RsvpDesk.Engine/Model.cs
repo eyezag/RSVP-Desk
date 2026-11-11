@@ -97,6 +97,9 @@ public enum MessagePurpose
 
     /// <summary>A reply inside the conversation.</summary>
     Reply,
+
+    /// <summary>Business-initiated reminder to a guest who hasn't finished.</summary>
+    Reminder,
 }
 
 /// <summary>A piece of message text, identified by a key in the message catalog plus its arguments.</summary>

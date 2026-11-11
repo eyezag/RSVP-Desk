@@ -19,6 +19,12 @@
     @if (organiser)
     {
         <div class="button-row tight">
+            @if (g.OptedOutAt is null && g.Status is GuestStatus.NotInvited or GuestStatus.Invited)
+            {
+                <form method="post" asp-page-handler="Invite" class="inline-form">
+                    <button type="submit" class="btn btn-primary" disabled="@(g.ConsentAt is null)">@(g.Status == GuestStatus.Invited ? "Resend invitation" : "Send invitation")</button>
+                </form>
+            }
             <a class="btn" asp-page="/Guests/Edit" asp-route-id="@g.Id">Edit</a>
         </div>
     }

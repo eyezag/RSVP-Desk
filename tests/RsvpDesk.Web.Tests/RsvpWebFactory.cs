@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
 using Npgsql;
 
 namespace RsvpDesk.Web.Tests;
@@ -12,6 +15,9 @@ public sealed class RsvpWebFactory : WebApplicationFactory<Program>
 {
     public const string OrganiserEmail = "organiser@test.example";
     public const string Password = "correct-horse-battery";
+
+    /// <summary>The app's clock. Starts at the real time and only moves when a test advances it.</summary>
+    public FakeTimeProvider Clock { get; } = new(DateTimeOffset.UtcNow);
 
     private readonly string? _sqlitePath;
     private readonly string? _postgresConnection;
@@ -34,6 +40,7 @@ public sealed class RsvpWebFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        builder.ConfigureTestServices(services => services.AddSingleton<TimeProvider>(Clock));
         builder.UseSetting("Database:MigrateOnStartup", "true");
         builder.UseSetting("Demo:SeedSampleEvent", "true");
         builder.UseSetting("Auth:InitialOrganiser:Email", OrganiserEmail);

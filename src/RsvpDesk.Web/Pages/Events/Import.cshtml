@@ -1,0 +1,55 @@
+@page "/Events/{id:int}/Guests/Import"
+@model RsvpDesk.Web.Pages.Events.ImportModel
+@{
+    ViewData["Title"] = "Import guests";
+}
+<div class="narrow">
+    <p><a asp-page="/Events/Details" asp-route-id="@Model.Id">← @Model.EventName</a></p>
+    <h1>Import guests from CSV</h1>
+    <p>
+        The first row must name the columns. Required: <code>name</code>, <code>phone</code>. Optional:
+        <code>consent</code> (yes or no) and <code>consent_source</code>. Numbers starting with 0 are read as South African.
+    </p>
+    <pre class="sample">name,phone,consent,consent_source
+Jane Example,082 555 0100,yes,Registration form
+"Smith, John",+27 82 555 0101,no,</pre>
+
+    @if (Model.Result is { } r)
+    {
+        @if (r.FileError is not null)
+        {
+            <p class="form-error" role="alert">@r.FileError</p>
+        }
+        else
+        {
+            <div class="callout" role="status">
+                Added @r.Added guest@(r.Added == 1 ? "" : "s").
+                @if (r.Problems.Count > 0) { <text>Skipped @r.Problems.Count row@(r.Problems.Count == 1 ? "" : "s"):</text> }
+            </div>
+            @if (r.Problems.Count > 0)
+            {
+                <ul class="plain-list spaced">
+                    @foreach (var p in r.Problems.Take(100))
+                    {
+                        <li>Row @p.Row: @p.Reason</li>
+                    }
+                </ul>
+            }
+            <p><a class="btn" asp-page="/Events/Details" asp-route-id="@Model.Id">Back to the guest list</a></p>
+        }
+    }
+
+    <form method="post" enctype="multipart/form-data" class="form">
+        <label for="file">CSV file (up to 1 MB)</label>
+        <input id="file" type="file" name="Upload" accept=".csv,text/csv" required class="field" />
+        <label class="check">
+            <input type="checkbox" name="AllConsented" value="true" />
+            Every guest in this file agreed to WhatsApp messages about this event (used when a row has no consent column)
+        </label>
+        <label for="source">How consent was given</label>
+        <input id="source" name="ConsentSource" class="field" maxlength="200" placeholder="e.g. RSVP list from the registration desk" />
+        <div class="button-row">
+            <button type="submit" class="btn btn-primary">Import</button>
+        </div>
+    </form>
+</div>

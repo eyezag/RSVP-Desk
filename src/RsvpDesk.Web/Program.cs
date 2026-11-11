@@ -95,12 +95,16 @@ builder.Services.AddSingleton<ChannelRegistry>();
 builder.Services.AddSingleton<InboundQueue>();
 builder.Services.AddSingleton<ProcessingNotifier>();
 builder.Services.AddScoped<ConversationService>();
+builder.Services.Configure<SendingOptions>(builder.Configuration.GetSection(SendingOptions.SectionName));
+builder.Services.AddScoped<OutreachService>();
+builder.Services.AddAntiforgery(o => o.HeaderName = "RequestVerificationToken");
 builder.Services.AddHostedService<InboundWorker>();
 
 // ---- Dashboard ----
 builder.Services.AddScoped<GuestQueries>();
 builder.Services.AddScoped<GuestCommands>();
 builder.Services.AddScoped<EventCommands>();
+builder.Services.AddScoped<GuestImporter>();
 builder.Services.AddScoped<RsvpDesk.Web.Reports.CateringReport>();
 
 builder.Services.AddHealthChecks()
@@ -132,6 +136,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthR
 
 app.MapGuestApi();
 app.MapExportApi();
+app.MapOutreachApi();
 if (channelMode == ChannelMode.Simulator)
 {
     app.MapSimulatorApi();

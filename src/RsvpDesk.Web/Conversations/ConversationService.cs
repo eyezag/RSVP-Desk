@@ -103,6 +103,29 @@ public sealed class ConversationService(
         return InviteOutcome.Sent;
     }
 
+    /// <summary>Sends a reminder to one guest. The caller (OutreachService) has already applied the reminder rules.</summary>
+    public async Task<bool> RemindAsync(int guestId, CancellationToken cancellationToken)
+    {
+        var guest = await LoadGuestAsync(g => g.Id == guestId, cancellationToken);
+        if (guest is null || guest.OptedOutAt is not null || guest.ConsentAt is null || guest.Conversation is null)
+        {
+            return false;
+        }
+
+        var result = engine.Remind(StateSerializer.Deserialise(guest.Conversation.StateData), guest.Event.ToDetails());
+        if (result.Messages.Count == 0)
+        {
+            return false;
+        }
+
+        var outbound = Apply(guest, guest.Conversation, result, guestReplied: false);
+        guest.LastReminderAt = clock.GetUtcNow();
+        guest.ReminderCount++;
+        await db.SaveChangesAsync(cancellationToken);
+        await SendAsync(guest, outbound, cancellationToken);
+        return true;
+    }
+
     private async Task HandleInboundAsync(NormalisedInbound inbound, CancellationToken cancellationToken)
     {
         if (await db.Messages.AnyAsync(m => m.ProviderMessageId == inbound.MessageId, cancellationToken))
@@ -130,6 +153,7 @@ public sealed class ConversationService(
             SentAt = inbound.SentAt,
         });
         guest.LastActivityAt = now;
+        guest.LastInboundAt = now;
 
         var conversation = EnsureConversation(guest);
         var state = StateSerializer.Deserialise(conversation.StateData);

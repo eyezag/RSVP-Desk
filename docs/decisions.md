@@ -200,6 +200,34 @@ Only guests whose status is Attending (they finished and said yes). Guests still
 ### D-403 Access to reports and exports
 Organisers only (D-304). Viewing the report and each export are written to the audit log.
 
+## Step 6: Invitations, reminders and CSV import
+
+### D-501 Who gets an invitation
+Guests who are not yet invited, have consent recorded and have not opted out, while the event is still in the future. The dashboard button shows how many are ready and asks for confirmation; the result says how many were sent, failed or skipped for lack of consent. Sending again only reaches guests added since. A single guest can be invited (or re-invited while they haven't replied) from their detail page.
+
+### D-502 Reminder rules
+A guest gets a reminder only if all of these hold:
+- status Invited or In chat (not finished), consent recorded, not opted out;
+- not waiting on the organiser after HELP (the organiser follows up instead);
+- invited at least `ReminderAfterDays` ago (per event, default 3);
+- no message from the guest in that time, and no reminder in that time;
+- fewer than `Sending:MaxRemindersPerGuest` reminders so far (default 2);
+- the event hasn't started.
+
+A reminder is a short nudge plus the guest's current question with its options, so they can carry on from where they stopped (`ConversationEngine.Remind`). Its purpose is `Reminder`, so live mode can send it as a template when the 24-hour window has closed (step 7).
+
+### D-503 Sending is synchronous
+Bulk sends run inside the request, one guest at a time, with an optional pause (`Sending:DelayBetweenMessagesMs`) for provider rate limits. A few hundred guests is well within a request; one failure doesn't stop the rest. A background job with progress would be the next step for bigger lists.
+
+### D-504 JSON endpoints and CSRF
+`POST /api/events/{id}/invitations` and `/reminders` are authenticated by the session cookie, so they also require the antiforgery token in a `RequestVerificationToken` header (SameSite=Strict cookies are a second layer). The dashboard uses ordinary forms with the same rules.
+
+### D-505 CSV import
+Header row required; columns `name` and `phone`, optional `consent` (yes/no) and `consent_source`, any order and case. A checkbox can mark the whole file as consented, with a required source. Bad rows (invalid number, duplicate number in the file or on the list, missing name, unreadable consent) are skipped and listed by row number; the rest are added. Limits: 1 MB, 5 000 rows. The import is audited with its counts.
+
+### D-506 Testing with time
+Integration tests replace `TimeProvider` with a fake clock that only moves when a test advances it, so reminder intervals are tested without waiting.
+
 ## Open questions
 
 1. D-004: is one migration set per provider acceptable?

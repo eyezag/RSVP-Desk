@@ -27,6 +27,8 @@
     "invalid_too_long": "Please keep it to {max} characters or fewer.",
     "invalid_empty": "Please type a short answer.",
     "change_not_yet": "You can reply CHANGE once you've finished answering.",
+    "reminder_not_replied": "Just a reminder: we'd love to know if you can come to {event} on {date}. Reply STOP if you'd rather not hear from us.",
+    "reminder_unfinished": "Just a reminder to finish your RSVP for {event} on {date}. Here's where we got to:",
 
     "diet_summary_item": "{label} ({count})",
     "diet_summary_other": "{label}: {note}",

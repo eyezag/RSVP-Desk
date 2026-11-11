@@ -142,6 +142,12 @@ namespace RsvpDesk.Web.Data.Migrations.Sqlite
                     b.Property<long?>("LastActivityAt")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("LastInboundAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("LastReminderAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -157,6 +163,9 @@ namespace RsvpDesk.Web.Data.Migrations.Sqlite
                         .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("ReminderCount")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Status")
                         .IsRequired()

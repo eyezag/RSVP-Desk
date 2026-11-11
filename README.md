@@ -4,7 +4,7 @@ An event management web app where guests receive an invitation and RSVP through 
 
 This is a portfolio project. Every event and guest in the demo is fictional.
 
-> **Status:** in progress. Build steps 1 to 5 are done: RSVP as a fictional guest in the simulator, then follow it on the staff dashboard and in the catering and access report. See [Build progress](#build-progress).
+> **Status:** in progress. Build steps 1 to 6 are done: RSVP as a fictional guest in the simulator, then follow it on the staff dashboard and in the catering and access report. See [Build progress](#build-progress).
 
 ## Two modes
 
@@ -104,7 +104,7 @@ Migrations are applied on startup unless `Database__MigrateOnStartup=false`.
 3. [x] Persistence and simulator mode
 4. [x] Dashboard
 5. [x] Reports and CSV exports
-6. [ ] Invitations and reminders
+6. [x] Invitations, reminders and CSV import
 7. [ ] Live WhatsApp mode
 8. [ ] Hardening and polish
 

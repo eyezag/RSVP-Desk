@@ -27,6 +27,8 @@ public static class MessageKeys
     public const string InvalidTooLong = "invalid_too_long";
     public const string InvalidEmpty = "invalid_empty";
     public const string ChangeNotYet = "change_not_yet";
+    public const string ReminderNotReplied = "reminder_not_replied";
+    public const string ReminderUnfinished = "reminder_unfinished";
 
     // Renderer-only keys.
     public const string DietSummaryItem = "diet_summary_item";

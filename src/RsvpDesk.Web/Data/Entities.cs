@@ -60,6 +60,12 @@ public sealed class Guest
     public string? ConsentSource { get; set; }
     public DateTimeOffset? OptedOutAt { get; set; }
     public DateTimeOffset? InviteSentAt { get; set; }
+    public DateTimeOffset? LastReminderAt { get; set; }
+    public int ReminderCount { get; set; }
+
+    /// <summary>When the guest last sent us a message (reminder rules, 24-hour window).</summary>
+    public DateTimeOffset? LastInboundAt { get; set; }
+
     public bool NeedsAttention { get; set; }
 
     /// <summary>Derived from the conversation and cached for filtering (see <c>GuestStatusRules</c>).</summary>

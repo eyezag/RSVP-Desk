@@ -10,7 +10,7 @@ using RsvpDesk.Web.Guests;
 
 namespace RsvpDesk.Web.Pages.Guests;
 
-public class DetailsModel(RsvpDbContext db, GuestCommands commands, AuditLog audit) : PageModel
+public class DetailsModel(RsvpDbContext db, GuestCommands commands, AuditLog audit, Conversations.ConversationService conversations) : PageModel
 {
     public sealed record MessageView(MessageDirection Direction, string Body, string? ReplyId, DateTimeOffset SentAt, DeliveryStatus? DeliveryStatus, IReadOnlyList<string> ChoiceTitles);
 
@@ -62,6 +62,26 @@ public class DetailsModel(RsvpDbContext db, GuestCommands commands, AuditLog aud
         }
 
         TempData["Flash"] = "Marked as handled.";
+        return RedirectToPage(new { id = Id });
+    }
+
+    public async Task<IActionResult> OnPostInviteAsync(CancellationToken ct)
+    {
+        if (!User.IsOrganiser())
+        {
+            return Forbid();
+        }
+
+        var outcome = await conversations.InviteAsync(Id, ct);
+        await audit.WriteAsync(User.UserId(), "InvitationSent", $"guest:{Id} outcome:{outcome}", ct);
+        TempData["Flash"] = outcome switch
+        {
+            Conversations.InviteOutcome.Sent => "Invitation sent.",
+            Conversations.InviteOutcome.NoConsent => "No consent is recorded for this guest, so the invitation was not sent.",
+            Conversations.InviteOutcome.OptedOut => "This guest opted out.",
+            Conversations.InviteOutcome.AlreadyInConversation => "This guest is already answering.",
+            _ => "Guest not found.",
+        };
         return RedirectToPage(new { id = Id });
     }
 
