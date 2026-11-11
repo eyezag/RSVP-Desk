@@ -96,8 +96,66 @@ Emitted as it happens: `AttendanceCaptured`, `PartySizeCaptured`, `DietaryCaptur
 ### D-106 Provisional WhatsApp label limits
 Labels were written to fit 20 characters for reply buttons and 24 for list rows, the limits I believe apply. These are **not yet confirmed** against Meta's documentation; that check is part of step 7 and will be recorded in `docs/whatsapp-integration.md`. The test that enforces them says so.
 
+## Step 3: Persistence and simulator mode
+
+### D-201 Data model, and where it differs from spec section 8
+All section 8 tables except `Users` and `AuditLog`, which arrive with login (step 4) and the audit log (step 8). Additions:
+
+| Column | Why |
+|---|---|
+| `Events.TimeZoneId` | Times are stored in UTC (D-202); the venue's zone is needed to show 18:00 rather than 16:00. |
+| `Events.IsSample` | Marks the fictional demo event; the simulator only works on it. |
+| `Guests.LastActivityAt` | The dashboard's "last activity" column, without a query over all messages. |
+| `Conversations.Version` | Optimistic concurrency, so an invitation and an inbound reply can't overwrite each other. |
+| `Messages.ReplyId` | The button or list id the guest tapped, next to the text. |
+| `Messages.ChoicesJson` | The options sent with a bot message, so the simulator and the guest detail view can show them. |
+| `WebhookEvents.Source` | `simulator` or `whatsapp`, so the worker knows which channel normalises the raw JSON. |
+
+Enums are stored as their names (readable, and safe to reorder). `Guests (EventId, PhoneE164)` is unique; `Messages.ProviderMessageId` and `WebhookEvents.ExternalId` have unique indexes.
+
+### D-202 Dates and times
+Everything is stored in UTC. SQLite has no date type and EF Core cannot compare or sort `DateTimeOffset` there, so the SQLite context stores UTC ticks as integers; the PostgreSQL context uses `timestamp with time zone` and converts values to UTC on write, as Npgsql requires. The event's local time comes from `Events.TimeZoneId` (IANA, e.g. `Africa/Johannesburg`). The integration suite runs on both databases in CI to catch differences.
+
+### D-203 One ingest path for both channels
+A simulator message is handled exactly as a WhatsApp webhook will be: it is stored as a raw `WebhookEvent` first, its id is put on an in-memory queue (`Channel<long>`), and the `InboundWorker` background service processes it: the channel normalises the raw JSON, `ConversationService` runs the engine and saves messages, answers and state in one `SaveChanges`, then sends the replies. Consequences:
+- Live mode in step 7 only needs a `WhatsAppCloudChannel` and the webhook endpoint; the rest is already exercised by the demo.
+- A single reader processes events in order, so two quick messages from the same guest can't race. That is plenty for a few hundred guests; partitioning by guest would be the next step if it weren't.
+- On start-up the worker re-queues stored events that were never processed, so a restart loses nothing.
+- Processing errors are written to `WebhookEvents.Error`; failed events are not retried automatically.
+- `POST /api/simulator/{guestId}/messages?wait=true` waits up to 5 seconds for the worker, so the simulator feels instant without polling. Without `wait` it returns 202 at once.
+
+### D-204 Idempotency in three layers
+1. `WebhookEvents.ExternalId` is unique: a repeated delivery is answered "duplicate" and never queued.
+2. `Messages.ProviderMessageId` is unique, and the service skips an inbound message it has already stored.
+3. The engine ignores message ids it has seen (D-104).
+
+### D-205 Sending
+Outbound messages are saved as `Pending` in the same transaction as the state change, then sent through the active channel and marked `Sent` or `Failed`. Sending after the commit means a crash can leave a message `Pending` but never sends a message the database doesn't know about. Retries with back-off, and a sweep for stuck `Pending` messages, belong to step 7 where sends can actually fail.
+
+### D-206 No login yet
+`GET /api/guests/{id}` is a staff endpoint but is open until step 4 adds login. The simulator endpoints are guest-side and stay open by design (spec section 9); they only exist in simulator mode and only act on the sample event's guests. Starting the app with `Channel:Mode=WhatsApp` fails fast with "not implemented until step 7".
+
+### D-207 Sample data
+On an empty database the app creates "Year-End Function 2026" (Sat 5 Dec 2026 18:00, Johannesburg, capacity 60, party max 4) and 12 fictional guests. Their numbers are in the unallocated `+27 00…` range, so they can never reach a real phone. One guest has no consent recorded, to show that such guests can't be invited. Turn seeding off with `Demo:SeedSampleEvent=false`. The simulator's **Reset guest** button (`POST /api/simulator/{id}/reset`) puts a guest back to "not invited" so the demo can be repeated.
+
+### D-208 Invitations in this step
+Only a single invitation, from the simulator. It needs consent and no opt-out, and is allowed while the guest is not yet invited or still at the attend question (a resend). Bulk sending, reminders and their rules are step 6.
+
+### D-209 Guest status
+Derived after every change and cached on `Guests.Status`: no conversation = NotInvited; invitation sent and no reply = Invited; any reply before finishing (including after CHANGE) = InChat; finished = Attending or Declined. Opting out does not change the status; `OptedOutAt` is shown separately and earlier answers are kept.
+
+### D-210 Simulator panel
+A Razor page with plain JavaScript (`wwwroot/js/simulator.js`). Bot messages with up to 3 options show reply buttons; more show a "Choose" button that opens a list, mirroring WhatsApp (limits still provisional, D-106). Old buttons stay tappable, as on WhatsApp, which shows the engine's stale-button handling. The "Saved answers" panel reads back from `GET /api/guests/{id}`, so it shows what is in the database, not what the page thinks.
+
+### D-211 Running locally
+`dotnet run` uses the Development profile. Running an unpublished build with `ASPNETCORE_ENVIRONMENT=Production` serves empty compressed static files (a .NET static-assets behaviour: compressed variants only exist in the publish output), so use Development locally or run the Docker image, which is published.
+
+### D-212 Finding the guest for a live message
+WhatsApp messages carry a phone number, not a guest id. For now the most recent event's guest with that number is used. Step 7 will revisit this, since one person may be on several events' lists.
+
 ## Open questions
 
 1. D-004: is one migration set per provider acceptable?
 2. D-104: are the behaviour choices above what you want, especially skipping the wheelchair count for a party of one and accepting "2" as the second dietary option?
-3. Section 7 says template approval takes time and should be submitted first. Drafting `docs/templates.md` needs the current Meta documentation, which I plan to read at the start of step 7 unless you want the template drafted sooner so you can submit it early.
+3. D-201: `Users` and `AuditLog` are left for steps 4 and 8. Is that fine?
+4. Section 7 says template approval takes time and should be submitted first. Drafting `docs/templates.md` needs the current Meta documentation, which I plan to read at the start of step 7 unless you want the template drafted sooner so you can submit it early.

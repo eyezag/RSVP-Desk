@@ -46,4 +46,17 @@ public static class DatabaseServiceCollectionExtensions
         var db = scope.ServiceProvider.GetRequiredService<RsvpDbContext>();
         await db.Database.MigrateAsync();
     }
+
+    public static async Task SeedDemoDataAsync(this WebApplication app)
+    {
+        var options = app.Configuration.GetSection(DemoOptions.SectionName).Get<DemoOptions>() ?? new DemoOptions();
+        if (!options.SeedSampleEvent)
+        {
+            return;
+        }
+
+        await using var scope = app.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<RsvpDbContext>();
+        await DemoSeeder.SeedAsync(db, scope.ServiceProvider.GetRequiredService<TimeProvider>());
+    }
 }

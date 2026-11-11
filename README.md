@@ -4,7 +4,7 @@ An event management web app where guests receive an invitation and RSVP through 
 
 This is a portfolio project. Every event and guest in the demo is fictional.
 
-> **Status:** in progress. Build steps 1 (skeleton) and 2 (conversation engine) are done. See [Build progress](#build-progress).
+> **Status:** in progress. Build steps 1 to 3 are done: you can RSVP as a fictional guest in the browser simulator and see the answers saved. See [Build progress](#build-progress).
 
 ## Two modes
 
@@ -33,6 +33,8 @@ WhatsApp Cloud API  --webhook-->  WhatsAppChannel      SimulatorChannel
 
 - `src/RsvpDesk.Engine`: the conversation engine. A pure function from (state, inbound message, event details) to (new state, outbound messages, captured answers). It has no package references at all.
 - `src/RsvpDesk.Web`: ASP.NET Core (Razor Pages and minimal APIs), EF Core, channels and background workers.
+
+Every inbound message, from the simulator now and from WhatsApp later, takes the same path: stored raw (with a unique id, so repeats are ignored), queued, processed in the background by the engine, then answers, messages and conversation state are saved together and replies are sent through the active channel.
 
 ### The conversation
 
@@ -64,8 +66,10 @@ With Docker:
 
 ```bash
 docker compose up --build
-# http://localhost:8080 , health at http://localhost:8080/health
+# http://localhost:8080/Simulator , health at http://localhost:8080/health
 ```
+
+Open **Simulator**, pick a guest, click **Send invitation**, then answer as the guest with the buttons, the list or by typing. The right-hand panel shows what was saved. **Reset guest** starts over.
 
 With the .NET 10 SDK:
 
@@ -80,7 +84,7 @@ Tests:
 dotnet test
 ```
 
-The PostgreSQL migration test runs only when `RSVP_TEST_POSTGRES` holds a connection string (CI sets it).
+The PostgreSQL migration test runs only when `RSVP_TEST_POSTGRES` holds a connection string. To run the integration tests against PostgreSQL instead of SQLite, also set `RSVP_TEST_DB=Postgres`. CI does both.
 
 ### Database
 
@@ -97,7 +101,7 @@ Migrations are applied on startup unless `Database__MigrateOnStartup=false`.
 
 1. [x] Skeleton: solution, Dockerfile, CI, health check, migrations
 2. [x] Conversation engine with table-driven tests
-3. [ ] Persistence and simulator mode
+3. [x] Persistence and simulator mode
 4. [ ] Dashboard
 5. [ ] Reports and CSV exports
 6. [ ] Invitations and reminders

@@ -35,6 +35,11 @@ jobs:
         env:
           # Enables the PostgreSQL migration test; skipped when unset.
           RSVP_TEST_POSTGRES: "Host=localhost;Database=rsvpdesk;Username=rsvpdesk;Password=ci-only"
+      - name: Integration tests against PostgreSQL
+        run: dotnet test tests/RsvpDesk.Web.Tests --no-build -c Release
+        env:
+          RSVP_TEST_DB: Postgres
+          RSVP_TEST_POSTGRES: "Host=localhost;Database=rsvpdesk;Username=rsvpdesk;Password=ci-only"
       - name: Check migrations are up to date with the model
         run: |
           dotnet ef migrations has-pending-model-changes --project src/RsvpDesk.Web --context SqliteRsvpDbContext

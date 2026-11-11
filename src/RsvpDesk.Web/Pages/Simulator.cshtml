@@ -1,0 +1,65 @@
+@page
+@model SimulatorModel
+@{
+    ViewData["Title"] = "Simulator";
+}
+
+<div class="sim-intro">
+    <h1>Guest simulator</h1>
+    <p class="muted">
+        Play a guest from the fictional sample event <strong>@Model.EventName</strong>. Messages go through the same
+        pipeline a WhatsApp message would: stored as a raw event, processed in the background by the conversation
+        engine, and saved to the database. Buttons and lists mimic WhatsApp's interactive messages.
+    </p>
+</div>
+
+<div class="sim-layout">
+    <section class="sim-panel" aria-labelledby="guest-heading">
+        <h2 id="guest-heading">Guest</h2>
+        <label for="guest-select" class="field-label">Reply as</label>
+        <select id="guest-select" class="field"></select>
+        <dl class="facts">
+            <dt>Status</dt><dd id="guest-status">–</dd>
+            <dt>Conversation step</dt><dd id="guest-step">–</dd>
+        </dl>
+        <div class="button-row">
+            <button type="button" id="invite-btn" class="btn btn-primary">Send invitation</button>
+            <button type="button" id="reset-btn" class="btn">Reset guest</button>
+        </div>
+        <p id="sim-notice" class="notice" role="status" aria-live="polite"></p>
+        <p class="muted small">Try typing STOP, HELP or CHANGE, an invalid answer, or tapping an old button.</p>
+    </section>
+
+    <section class="phone" aria-label="Guest phone">
+        <header class="phone-header">
+            <span class="avatar" aria-hidden="true">RD</span>
+            <div>
+                <div class="phone-title">RSVP Desk</div>
+                <div class="phone-subtitle" id="phone-subtitle">Business account</div>
+            </div>
+        </header>
+        <div class="chat" id="chat" aria-live="polite"></div>
+        <form class="composer" id="composer" autocomplete="off">
+            <label for="composer-input" class="visually-hidden">Message</label>
+            <input id="composer-input" maxlength="1000" placeholder="Message" />
+            <button type="submit" class="send" aria-label="Send">➤</button>
+        </form>
+        <div class="list-sheet" id="list-sheet" hidden>
+            <div class="list-sheet-inner" role="dialog" aria-modal="true" aria-labelledby="list-sheet-title">
+                <div class="list-sheet-title" id="list-sheet-title">Choose</div>
+                <div id="list-sheet-options"></div>
+                <button type="button" class="btn list-sheet-cancel" id="list-sheet-cancel">Cancel</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="sim-panel" aria-labelledby="answers-heading">
+        <h2 id="answers-heading">Saved answers</h2>
+        <p class="muted small">Read back from the database after each message.</p>
+        <dl class="facts" id="answers"></dl>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/simulator.js" asp-append-version="true"></script>
+}
