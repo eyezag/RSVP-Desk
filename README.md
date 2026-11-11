@@ -4,7 +4,7 @@ An event management web app where guests receive an invitation and RSVP through 
 
 This is a portfolio project. Every event and guest in the demo is fictional.
 
-> **Status:** in progress. Build step 1 (skeleton) is done. See [Build progress](#build-progress).
+> **Status:** in progress. Build steps 1 (skeleton) and 2 (conversation engine) are done. See [Build progress](#build-progress).
 
 ## Two modes
 
@@ -33,6 +33,28 @@ WhatsApp Cloud API  --webhook-->  WhatsAppChannel      SimulatorChannel
 
 - `src/RsvpDesk.Engine`: the conversation engine. A pure function from (state, inbound message, event details) to (new state, outbound messages, captured answers). It has no package references at all.
 - `src/RsvpDesk.Web`: ASP.NET Core (Razor Pages and minimal APIs), EF Core, channels and background workers.
+
+### The conversation
+
+```
+Bot:   You're invited to Year-End Function 2026! ... Will you attend?   [Yes, I'll be there] [No, I can't make it]
+Guest: yes
+Bot:   Great! How many people will attend, including you? (1 to 4)
+Guest: 2
+Bot:   Any dietary requirement for you?          [No requirements | Vegetarian | Vegan | Halal | Gluten-free | Other]
+Guest: Other
+Bot:   Please type the requirement, for example nut allergy.
+Guest: Nut allergy
+Bot:   Any dietary requirement for guest 2?
+Guest: halal
+Bot:   Does anyone in your party use a wheelchair?   [Yes] [No]
+Guest: no
+Bot:   Anything else we should know, ...? Tap Skip or type your note.   [Skip]
+Guest: Skip
+Bot:   Thank you, you're confirmed ... Reply CHANGE to update.
+```
+
+STOP, HELP and CHANGE work throughout. All bot text lives in `src/RsvpDesk.Engine/Resources/messages.en.json`.
 
 Design choices are recorded in [docs/decisions.md](docs/decisions.md).
 
@@ -74,7 +96,7 @@ Migrations are applied on startup unless `Database__MigrateOnStartup=false`.
 ## Build progress
 
 1. [x] Skeleton: solution, Dockerfile, CI, health check, migrations
-2. [ ] Conversation engine with table-driven tests
+2. [x] Conversation engine with table-driven tests
 3. [ ] Persistence and simulator mode
 4. [ ] Dashboard
 5. [ ] Reports and CSV exports

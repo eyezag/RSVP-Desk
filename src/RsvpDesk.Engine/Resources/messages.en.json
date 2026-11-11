@@ -1,0 +1,67 @@
+{
+  "culture": "en-ZA",
+  "dateFormat": "dddd d MMMM yyyy 'at' HH:mm",
+
+  "messages": {
+    "invitation": "You're invited to {event}!\n\n📅 {date}\n📍 {venue}\n\nWe'd like to know if you can come and, if so, about any dietary or access needs so we can plan catering and access. We'll only use your answers for this event. Reply STOP at any time to stop messages.",
+    "attend_question": "Will you attend {event}?",
+    "party_question": "Great! How many people will attend, including you? (1 to {max})",
+    "diet_question_self": "Any dietary requirement for you?",
+    "diet_question_guest": "Any dietary requirement for guest {index}?",
+    "diet_other_question": "Please type the requirement, for example nut allergy.",
+    "wheelchair_question": "Does anyone in your party use a wheelchair?",
+    "wheelchair_count_question": "How many people in your party use a wheelchair? (1 to {max})",
+    "note_question": "Anything else we should know, for example a step-free route or accessible parking? Tap Skip or type your note.",
+    "confirmed_summary": "Thank you, you're confirmed for {event}.\n\n📅 {date}\n👥 Party size: {party}\n🍽️ Dietary: {diets}\n♿ Wheelchair users: {wheelchairs}",
+    "confirmed_summary_note": "📝 Note: {note}",
+    "change_hint": "Reply CHANGE to update.",
+    "declined": "Sorry you can't make it, thanks for letting us know. Reply CHANGE if your plans change.",
+    "already_confirmed": "Your RSVP is already confirmed.",
+    "already_declined": "We have you down as not attending.",
+    "restart_ack": "No problem, let's update your RSVP.",
+    "opted_out": "You won't receive any more messages about this event.",
+    "help_ack": "Thanks, we've let the organiser know. Someone will get back to you.",
+    "help_hint": "Reply HELP to speak to the organiser.",
+    "invalid_choice": "Sorry, I didn't catch that. Please choose one of the options.",
+    "invalid_number": "Please reply with a number from 1 to {max}.",
+    "invalid_too_long": "Please keep it to {max} characters or fewer.",
+    "invalid_empty": "Please type a short answer.",
+    "change_not_yet": "You can reply CHANGE once you've finished answering.",
+
+    "diet_summary_item": "{label} ({count})",
+    "diet_summary_other": "{label}: {note}",
+    "diet_summary_separator": ", ",
+    "number_option": "{n}",
+    "list_button": "Choose"
+  },
+
+  "options": {
+    "attend.yes": { "label": "Yes, I'll be there", "aliases": ["yes", "y", "yeah", "yep", "yes please", "sure", "ok", "okay", "👍"] },
+    "attend.no": { "label": "No, I can't make it", "aliases": ["no", "n", "nope", "no thanks", "cannot", "can't", "cant"] },
+
+    "diet.none": { "label": "No requirements", "aliases": ["none", "no", "n", "nothing", "no requirements", "no requirement", "nope", "n/a", "na"] },
+    "diet.vegetarian": { "label": "Vegetarian", "aliases": ["vegetarian", "veg", "veggie"] },
+    "diet.vegan": { "label": "Vegan", "aliases": ["vegan"] },
+    "diet.halal": { "label": "Halal", "aliases": ["halal"] },
+    "diet.gluten_free": { "label": "Gluten-free", "aliases": ["gluten-free", "gluten free", "glutenfree", "gf", "no gluten", "coeliac", "celiac"] },
+    "diet.other": { "label": "Other", "aliases": ["other", "something else"] },
+
+    "wheelchair.yes": { "label": "Yes", "aliases": ["yes", "y", "yeah", "yep"] },
+    "wheelchair.no": { "label": "No", "aliases": ["no", "n", "nope", "none", "no one", "nobody"] },
+
+    "note.skip": { "label": "Skip", "aliases": ["skip", "no", "none", "nothing", "no thanks", "n/a", "na", "nope"] },
+
+    "change": { "label": "Change", "aliases": [] }
+  },
+
+  "keywords": {
+    "stop": ["stop", "unsubscribe", "stop all"],
+    "help": ["help"],
+    "change": ["change", "update", "edit"]
+  },
+
+  "numberWords": {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10
+  }
+}

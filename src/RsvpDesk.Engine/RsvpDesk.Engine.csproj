@@ -5,4 +5,8 @@
     no EF Core, no WhatsApp types. Do not add package references here.
   -->
 
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\messages.*.json" LogicalName="RsvpDesk.Engine.Resources.%(Filename)%(Extension)" WithCulture="false" />
+  </ItemGroup>
+
 </Project>

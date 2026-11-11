@@ -50,3 +50,54 @@ The app redirects to HTTPS and sends HSTS outside Development. In a container, T
 
 ### D-008 Health check
 `GET /health` returns `{"status":"Healthy","checks":{"database":"Healthy"}}` and never includes exception details.
+
+## Step 2: Conversation engine
+
+### D-101 Engine API
+```csharp
+var engine = new ConversationEngine();                    // uses MessageCatalog.English
+EngineResult r = engine.Invite(state, eventDetails);      // invitation; NotInvited -> Invited
+EngineResult r = engine.Handle(state, inbound, eventDetails);
+OutboundMessage m = engine.Prompt(state, eventDetails);   // current question, for reminders and re-prompts
+```
+`EngineResult` = new `ConversationState`, outbound messages, captured data, and a `Duplicate` flag. `Handle` takes the event details as an argument (the spec's signature lists only state and inbound) because the engine needs the party maximum and the event name, date and venue for its messages, and must not look them up itself.
+
+The state is a plain immutable record (step, current person index, invalid-answer streak, answers so far, recent inbound message ids). It round-trips through System.Text.Json and is meant to be stored in `Conversations.StateData`.
+
+### D-102 No text in the engine
+The engine emits message keys with arguments (`MessagePart`) and option ids (`Choice`). `MessageRenderer` turns them into text using `Resources/messages.en.json`, which holds all message text, option labels, the typed words that match each option (aliases), the keywords and number words. Adding a language means adding `messages.{lang}.json`. A test checks every key the engine can use has text, and that every message the engine can produce renders.
+
+The engine still uses the catalog's *word lists* to understand typed answers, since those are language data too.
+
+### D-103 Option ids
+Stable ids that will also be the WhatsApp button and list row ids: `attend.yes|no`, `party.1..max`, `diet.none|vegetarian|vegan|halal|gluten_free|other`, `wheelchair.yes|no`, `wheelchairs.1..n`, `note.skip`, `change`. The channel decides whether a question's choices become reply buttons or a list (step 7, once the limits are confirmed).
+
+### D-104 Behaviour the spec left open
+- **Party of one and wheelchair:** if the party size is 1 and the answer is "yes", the engine records 1 wheelchair user and skips `WheelchairCount` (the only valid answer would be 1).
+- **Party size and wheelchair count are offered as choices** (`party.1..max`) as well as typed numbers ("2" or "two"). Decimals, negatives and out-of-range numbers are invalid.
+- **Dietary list position:** typing "2" at the dietary question picks the second option, as people do with numbered lists.
+- **Typed button titles** (e.g. "Yes, I'll be there") match, for channels that send the title without an id.
+- **Taps on a button from an earlier question** are treated as invalid input, not as an answer to the current question.
+- **Keywords** must be the whole message: "STOP" opts out, "Please stop at the side entrance" is a note. STOP and HELP are recognised in every state, including inside free-text answers. Synonyms: STOP = stop, unsubscribe, stop all; CHANGE = change, update, edit.
+- **CHANGE before finishing** is invalid input with its own hint ("You can reply CHANGE once you've finished answering") and counts towards the HELP suggestion.
+- **HELP mid-conversation** acknowledges, flags the guest and repeats the current question so they can carry on; it also resets the invalid streak. After finishing it only acknowledges.
+- **Messages after Confirmed/Declined** (other than CHANGE/HELP/STOP) get "already confirmed" plus the summary, or "not attending" plus the CHANGE hint. They do not count as invalid.
+- **A guest who writes first** (state `NotInvited`) gets the invitation text and attend question as a normal reply.
+- **Invitations to opted-out guests** produce nothing. Re-inviting a guest who is mid-conversation re-sends the invitation without touching their answers; whether to allow that is an app-level rule for step 6.
+- **"Two invalid answers in a row"**: the HELP line is added from the second consecutive invalid answer onwards.
+- **Free-text lengths** (60 and 120) are counted in characters as the guest sees them (text elements), so emoji count as one. Empty or whitespace-only text is invalid. A Skip in the note step is the Skip button or one of: skip, no, none, nothing, n/a.
+- **The note's "Skip"** stores `null`.
+- **Idempotency:** the state remembers the last 50 inbound message ids. A repeat returns the state unchanged, with no messages and no captures. The database's unique index on the provider message id (step 3/7) is the main guard; this is the second line.
+- **After STOP** the engine is silent for every input. Answers given before STOP are kept. Re-enabling is an organiser action outside the engine.
+
+### D-105 Captured data
+Emitted as it happens: `AttendanceCaptured`, `PartySizeCaptured`, `DietaryCaptured(personIndex, dietary, note)`, `WheelchairUsersCaptured`, `AccessNoteCaptured`, `RsvpCompleted(attending)`, `AnswersCleared`, `OptedOut`, `NeedsAttention`. Persistence (step 3) applies these to the `Rsvps`, `RsvpPersons` and `Guests` tables.
+
+### D-106 Provisional WhatsApp label limits
+Labels were written to fit 20 characters for reply buttons and 24 for list rows, the limits I believe apply. These are **not yet confirmed** against Meta's documentation; that check is part of step 7 and will be recorded in `docs/whatsapp-integration.md`. The test that enforces them says so.
+
+## Open questions
+
+1. D-004: is one migration set per provider acceptable?
+2. D-104: are the behaviour choices above what you want, especially skipping the wheelchair count for a party of one and accepting "2" as the second dietary option?
+3. Section 7 says template approval takes time and should be submitted first. Drafting `docs/templates.md` needs the current Meta documentation, which I plan to read at the start of step 7 unless you want the template drafted sooner so you can submit it early.
