@@ -27,7 +27,7 @@ public sealed class DashboardTests(RsvpWebFactory factory) : SimulatorTestBase(f
         var all = await staff.GetFromJsonAsync<GuestPageDto>($"/api/events/{eventId}/guests?pageSize=100");
         var attendingOnly = await staff.GetFromJsonAsync<GuestPageDto>($"/api/events/{eventId}/guests?status=Attending&pageSize=100");
         var byName = await staff.GetFromJsonAsync<GuestPageDto>($"/api/events/{eventId}/guests?q=THANDI");
-        var byNumber = await staff.GetFromJsonAsync<GuestPageDto>($"/api/events/{eventId}/guests?q=000003");
+        var byNumber = await staff.GetFromJsonAsync<GuestPageDto>($"/api/events/{eventId}/guests?q=27000000003");
         var unknownFilter = await staff.GetFromJsonAsync<GuestPageDto>($"/api/events/{eventId}/guests?status=bogus");
 
         Assert.True(all!.Total >= 12);
