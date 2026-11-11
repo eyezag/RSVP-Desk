@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · RSVP Desk</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" asp-page="/Index">RSVP Desk</a>
+        <span class="mode-badge" title="Channel mode">Simulator mode</span>
+    </header>
+    <main class="page">
+        @RenderBody()
+    </main>
+    <footer class="footer">
+        RSVP Desk is a portfolio project. All events and guests shown are fictional.
+    </footer>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

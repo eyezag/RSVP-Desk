@@ -1,0 +1,36 @@
+# Local runs.
+#   docker compose up --build              -> SQLite, simulator mode, http://localhost:8080
+#   docker compose --profile postgres up --build   -> also starts PostgreSQL and points the app at it
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Channel__Mode: Simulator
+      Database__Provider: ${DATABASE_PROVIDER:-Sqlite}
+      ConnectionStrings__Rsvp: ${RSVP_CONNECTION_STRING:-Data Source=/data/rsvpdesk.db}
+    volumes:
+      - rsvp-data:/data
+
+  postgres:
+    profiles: ["postgres"]
+    image: postgres:16
+    environment:
+      POSTGRES_DB: rsvpdesk
+      POSTGRES_USER: rsvpdesk
+      # Local development only. Never reuse this password anywhere real.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-only}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rsvpdesk -d rsvpdesk"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  rsvp-data:
+  pg-data:

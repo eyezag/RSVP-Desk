@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RsvpDesk.Engine/RsvpDesk.Engine.csproj" />
+    <Project Path="src/RsvpDesk.Web/RsvpDesk.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RsvpDesk.Engine.Tests/RsvpDesk.Engine.Tests.csproj" />
+    <Project Path="tests/RsvpDesk.Web.Tests/RsvpDesk.Web.Tests.csproj" />
+  </Folder>
+</Solution>

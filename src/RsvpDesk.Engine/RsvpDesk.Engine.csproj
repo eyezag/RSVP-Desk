@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The conversation engine is deliberately dependency-free: no ASP.NET Core,
+    no EF Core, no WhatsApp types. Do not add package references here.
+  -->
+
+</Project>
