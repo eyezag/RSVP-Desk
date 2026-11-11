@@ -27,6 +27,7 @@
   let pollTimer = null;
   let busy = false;
 
+  const DIETS = { None: "No requirements", GlutenFree: "Gluten-free" };
   const LABELS = { NotInvited: "Not invited", InChat: "In chat", WheelchairCount: "Wheelchair count", DietOther: "Dietary (other)", OptedOut: "Opted out" };
   const label = (v) => LABELS[v] ?? v;
 
@@ -144,7 +145,7 @@
     const rows = [
       ["Attending", a.attending === null ? "–" : a.attending ? "Yes" : "No"],
       ["Party size", a.partySize ?? "–"],
-      ["Dietary", a.diets.length ? a.diets.map((d) => `${d.personIndex}: ${d.dietary}${d.note ? ` (${d.note})` : ""}`).join("\n") : "–"],
+      ["Dietary", a.diets.length ? a.diets.map((d) => `${d.personIndex}: ${DIETS[d.dietary] ?? d.dietary}${d.note ? ` (${d.note})` : ""}`).join("\n") : "–"],
       ["Wheelchair users", a.wheelchairUsers ?? "–"],
       ["Access note", a.accessNote ?? "–"],
       ["Completed", a.confirmedAt ? new Date(a.confirmedAt).toLocaleString() : "–"],

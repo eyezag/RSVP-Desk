@@ -211,3 +211,7 @@ body {
 .sim-panel h3 { font-size: 0.95rem; margin: 1.25rem 0 0.5rem; }
 .sample { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; overflow-x: auto; font-size: 0.85rem; }
 .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.danger-zone { margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+.danger-zone h2 { font-size: 1rem; }
+.btn-danger { border-color: #d92d20; color: #b42318; }
+.btn-danger:hover { background: #fef3f2; }

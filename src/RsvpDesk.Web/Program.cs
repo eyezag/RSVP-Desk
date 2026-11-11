@@ -115,7 +115,14 @@ builder.Services.AddScoped<GuestQueries>();
 builder.Services.AddScoped<GuestCommands>();
 builder.Services.AddScoped<EventCommands>();
 builder.Services.AddScoped<GuestImporter>();
+
+// ---- Privacy ----
+builder.Services.Configure<RsvpDesk.Web.Privacy.RetentionOptions>(builder.Configuration.GetSection(RsvpDesk.Web.Privacy.RetentionOptions.SectionName));
+builder.Services.AddScoped<RsvpDesk.Web.Privacy.RetentionService>();
+builder.Services.AddHostedService<RsvpDesk.Web.Privacy.RetentionWorker>();
 builder.Services.AddScoped<RsvpDesk.Web.Reports.CateringReport>();
+
+builder.Services.AddProblemDetails();
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<RsvpDbContext>("database");
@@ -127,12 +134,19 @@ if (trustForwardedHeaders)
     app.UseForwardedHeaders();
 }
 
+// API and webhook errors: RFC 7807 problem JSON without exception details. Pages: the error page.
+app.UseWhen(
+    ctx => ctx.Request.Path.StartsWithSegments("/api") || ctx.Request.Path.StartsWithSegments("/webhooks"),
+    api => api.UseExceptionHandler());
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseWhen(
+        ctx => !ctx.Request.Path.StartsWithSegments("/api") && !ctx.Request.Path.StartsWithSegments("/webhooks"),
+        pages => pages.UseExceptionHandler("/Error"));
     app.UseHsts();
 }
 
+app.UseSecurityHeaders();
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseRateLimiter();

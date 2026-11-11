@@ -259,6 +259,23 @@ Up to 3 attempts with exponential back-off (or `Retry-After`) for 429/5xx, netwo
 ### D-609 Not verified here
 I could not send a real WhatsApp message from this environment: that needs your Meta app, a test number and your phone (the spec's "done when" for this step). Everything else is tested against payloads taken from the documentation, with Graph API calls answered by a fake. See the README for the setup steps.
 
+## Step 8: Hardening and polish
+
+### D-701 Retention
+A background job (on start-up, then every 6 hours; `Retention:*` settings) finds events whose date plus `DeleteDataAfterDays` has passed. For each, in one transaction: messages, conversations and per-person dietary answers are deleted; access notes and wheelchair counts are cleared; names become "Deleted guest <id>", numbers `deleted:<id>`, WhatsApp user ids and consent sources are removed. Whether a party came and its size are kept, as anonymous numbers. The event is marked with `GuestDataDeletedAt`. Processed raw webhook payloads (which contain numbers and message text) are deleted after 30 days. The fictional sample event is never touched, so the public demo keeps working.
+
+### D-702 Deletion on request
+An organiser can delete a guest from their page (with a confirmation). The guest, their answers and conversation, and stored raw webhook events that mention their number, WhatsApp user id or simulator id are removed in one transaction, and the deletion is audited.
+
+### D-703 Audit log page
+Organisers can read the audit log at `/Admin/Audit`, newest first, 50 per page.
+
+### D-704 Security headers and errors
+Every response has a Content Security Policy (scripts only from the site itself; inline styles allowed for the bar widths), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, a referrer policy and a permissions policy. The `confirm()` prompts moved from inline handlers to `site.js` so inline script can stay forbidden; a test checks no page reintroduces one. API and webhook errors return RFC 7807 problem JSON without exception details; pages show the error page.
+
+### D-705 Screenshots and demo
+`docs/screenshots/` and `docs/demo/` were captured with Playwright from the fictional sample data, at 2× scale. The demo is a 32-second recording of one full RSVP in the simulator, then the dashboard and the catering report updating.
+
 ## Open questions
 
 1. D-004: is one migration set per provider acceptable?

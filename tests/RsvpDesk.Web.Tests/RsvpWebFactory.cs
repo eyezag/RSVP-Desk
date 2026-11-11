@@ -46,6 +46,7 @@ public class RsvpWebFactory : WebApplicationFactory<Program>
         builder.UseSetting("Auth:InitialOrganiser:Email", OrganiserEmail);
         builder.UseSetting("Auth:InitialOrganiser:Password", Password);
         builder.UseSetting("Auth:LoginRateLimitPerMinute", "10000");
+        builder.UseSetting("Retention:Enabled", "false"); // tests call RetentionService directly
         if (_postgresConnection is not null)
         {
             builder.UseSetting("Database:Provider", "Postgres");

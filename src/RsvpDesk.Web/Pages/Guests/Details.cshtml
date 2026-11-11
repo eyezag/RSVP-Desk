@@ -30,6 +30,17 @@
     }
 </div>
 
+@if (organiser)
+{
+    <section class="danger-zone" aria-labelledby="delete-heading">
+        <h2 id="delete-heading">Delete this guest's data</h2>
+        <p class="muted small">Use this when a guest asks for their information to be deleted. It removes the guest, their answers, the conversation and stored webhook payloads that mention them. It can't be undone.</p>
+        <form method="post" asp-page-handler="Delete" data-confirm="Delete @g.Name and all their data? This can't be undone.">
+            <button type="submit" class="btn btn-danger">Delete guest and data</button>
+        </form>
+    </section>
+}
+
 @if (TempData["Flash"] is string flash)
 {
     <p class="callout" role="status">@flash</p>
@@ -129,3 +140,14 @@
         </section>
     }
 </div>
+
+@if (organiser)
+{
+    <section class="danger-zone" aria-labelledby="delete-heading">
+        <h2 id="delete-heading">Delete this guest's data</h2>
+        <p class="muted small">Use this when a guest asks for their information to be deleted. It removes the guest, their answers, the conversation and stored webhook payloads that mention them. It can't be undone.</p>
+        <form method="post" asp-page-handler="Delete" data-confirm="Delete @g.Name and all their data? This can't be undone.">
+            <button type="submit" class="btn btn-danger">Delete guest and data</button>
+        </form>
+    </section>
+}

@@ -21,8 +21,11 @@ public sealed class Event
     /// <summary>Reminders go only to guests invited at least this many days ago, and at most this often (step 6).</summary>
     public int ReminderAfterDays { get; set; } = 3;
 
-    /// <summary>Marks the fictional demo event.</summary>
+    /// <summary>Marks the fictional demo event. Sample events are never removed by the retention job.</summary>
     public bool IsSample { get; set; }
+
+    /// <summary>When the retention job anonymised this event's guests (null until then).</summary>
+    public DateTimeOffset? GuestDataDeletedAt { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 

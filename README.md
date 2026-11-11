@@ -4,7 +4,19 @@ An event management web app where guests receive an invitation and RSVP through 
 
 This is a portfolio project. Every event and guest in the demo is fictional.
 
-> **Status:** in progress. Build steps 1 to 7 are done: RSVP as a fictional guest in the simulator, then follow it on the staff dashboard and in the catering and access report. See [Build progress](#build-progress).
+> **Honest statement:** simulator mode is the default and needs nothing. Live mode needs your own Meta app, a WhatsApp number and approved message templates; it is built from Meta's current documentation and tested against recorded payload shapes, but sending real messages needs your credentials.
+
+![A full RSVP in the simulator, then the dashboard and catering report updating](docs/demo/rsvp-demo.gif)
+
+The same recording as video: [docs/demo/rsvp-demo.mp4](docs/demo/rsvp-demo.mp4) (32 s).
+
+## Screenshots
+
+| Guest simulator | Dashboard |
+|---|---|
+| ![Simulator](docs/screenshots/simulator.png) | ![Dashboard](docs/screenshots/dashboard.png) |
+| **Catering and access report** | **Guest detail** |
+| ![Report](docs/screenshots/catering-and-access.png) | ![Guest detail](docs/screenshots/guest-detail.png) | See [Build progress](#build-progress).
 
 ## Two modes
 
@@ -116,15 +128,32 @@ Migrations are applied on startup unless `Database__MigrateOnStartup=false`.
 
 ## Build progress
 
+All eight build steps from the spec are done:
+
 1. [x] Skeleton: solution, Dockerfile, CI, health check, migrations
 2. [x] Conversation engine with table-driven tests
 3. [x] Persistence and simulator mode
-4. [x] Dashboard
-5. [x] Reports and CSV exports
+4. [x] Dashboard with staff login
+5. [x] Catering and access report, CSV exports
 6. [x] Invitations, reminders and CSV import
 7. [x] Live WhatsApp mode (tested against a fake Graph API; needs your Meta app for a real run)
-8. [ ] Hardening and polish
+8. [x] Hardening: audit log, retention job, deletion on request, security headers, screenshots and demo
 
-## Privacy
+## Privacy (POPIA)
 
-Dietary and access needs can be special personal information under POPIA (health, religion). The app collects only what catering and access planning need, honours STOP immediately, and will delete or anonymise guest data a configurable number of days after the event.
+Dietary and access needs can be special personal information (health, religion), so:
+
+- Guests are messaged only with recorded consent (`ConsentAt`, `ConsentSource`), and the invitation says why the information is collected.
+- STOP takes effect at once and blocks invitations and reminders; only an organiser can re-enable.
+- Dietary and access answers, the conversation and exports are for **Organisers** only; **Viewers** see numbers without them. Viewing guest details or reports and every export is written to the audit log.
+- A guest's data can be deleted on request from their page. A retention job anonymises each event's guests a configurable number of days after the event (keeping only whether a party came and its size) and deletes raw webhook payloads after 30 days. The fictional sample event is exempt.
+- Secrets come from user-secrets or environment variables, never the repository. Logs use guest ids, never phone numbers or message text.
+
+## What I'd do next
+
+- **More languages.** All bot text is in one resource file; add `messages.zu.json`, `messages.af.json`, etc., plus a language per guest and translated templates.
+- **Check-in at the door:** a QR code per confirmed party and a staff check-in screen with live arrivals against the headcount.
+- **Seating plans** using party sizes and access needs (wheelchair spaces near step-free routes).
+- **Bigger sends as background jobs** with progress, and automatic re-sending of failed messages once a provider error clears.
+- **User management in the app** instead of the command line, with sign-in by email link.
+- **Multiple organisations** with data separated per organisation.

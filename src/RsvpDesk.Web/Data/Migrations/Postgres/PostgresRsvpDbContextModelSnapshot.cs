@@ -98,6 +98,9 @@ namespace RsvpDesk.Web.Data.Migrations.Postgres
                     b.Property<int>("DeleteDataAfterDays")
                         .HasColumnType("integer");
 
+                    b.Property<DateTimeOffset?>("GuestDataDeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsSample")
                         .HasColumnType("boolean");
 

@@ -10,7 +10,7 @@ using RsvpDesk.Web.Guests;
 
 namespace RsvpDesk.Web.Pages.Guests;
 
-public class DetailsModel(RsvpDbContext db, GuestCommands commands, AuditLog audit, Conversations.ConversationService conversations) : PageModel
+public class DetailsModel(RsvpDbContext db, GuestCommands commands, AuditLog audit, Conversations.ConversationService conversations, Privacy.RetentionService retention) : PageModel
 {
     public sealed record MessageView(MessageDirection Direction, string Body, string? ReplyId, DateTimeOffset SentAt, DeliveryStatus? DeliveryStatus, IReadOnlyList<string> ChoiceTitles, string? DeliveryError);
 
@@ -84,6 +84,24 @@ public class DetailsModel(RsvpDbContext db, GuestCommands commands, AuditLog aud
             _ => "Guest not found.",
         };
         return RedirectToPage(new { id = Id });
+    }
+
+    /// <summary>Deletes everything about this guest, on their request (POPIA).</summary>
+    public async Task<IActionResult> OnPostDeleteAsync(CancellationToken ct)
+    {
+        if (!User.IsOrganiser())
+        {
+            return Forbid();
+        }
+
+        var eventId = await db.Guests.Where(g => g.Id == Id).Select(g => (int?)g.EventId).FirstOrDefaultAsync(ct);
+        if (eventId is null || !await retention.DeleteGuestAsync(Id, User.UserId(), ct))
+        {
+            return NotFound();
+        }
+
+        TempData["Flash"] = "The guest and all their data were deleted.";
+        return RedirectToPage("/Events/Details", new { id = eventId });
     }
 
     public async Task<IActionResult> OnPostReenableAsync(CancellationToken ct)

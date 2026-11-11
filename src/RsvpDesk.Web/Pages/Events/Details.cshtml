@@ -60,12 +60,12 @@
                 @if (Model.Invitations is { } inv)
                 {
                     <form method="post" asp-page-handler="Invite" class="inline-form"
-                          onsubmit="return confirm('Send the invitation to @inv.Ready guest(s) on WhatsApp?')">
+                          data-confirm="Send the invitation to @inv.Ready guest(s) on WhatsApp?">
                         <button type="submit" class="btn btn-primary" disabled="@(inv.Ready == 0 || inv.EventInPast)">Send invitations (@inv.Ready)</button>
                     </form>
                 }
                 <form method="post" asp-page-handler="Remind" class="inline-form"
-                      onsubmit="return confirm('Send a reminder to @Model.ReminderCandidates guest(s)?')">
+                      data-confirm="Send a reminder to @Model.ReminderCandidates guest(s)?">
                     <button type="submit" class="btn" disabled="@(Model.ReminderCandidates == 0)"
                             title="Guests invited at least @Model.Event.ReminderAfterDays days ago who haven't finished or replied since">Send reminders (@Model.ReminderCandidates)</button>
                 </form>

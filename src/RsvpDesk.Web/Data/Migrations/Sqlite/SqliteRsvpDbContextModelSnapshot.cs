@@ -88,6 +88,9 @@ namespace RsvpDesk.Web.Data.Migrations.Sqlite
                     b.Property<int>("DeleteDataAfterDays")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("GuestDataDeletedAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsSample")
                         .HasColumnType("INTEGER");
 

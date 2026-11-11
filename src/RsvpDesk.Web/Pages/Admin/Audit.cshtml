@@ -1,0 +1,37 @@
+@page
+@model RsvpDesk.Web.Pages.Admin.AuditModel
+@{
+    ViewData["Title"] = "Audit log";
+}
+
+<h1>Audit log</h1>
+<p class="muted">Sign-ins, views of dietary and access information, exports, messages sent and changes. Newest first. Times in Africa/Johannesburg.</p>
+
+<div class="table-wrap">
+    <table class="table">
+        <thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">Action</th><th scope="col">Target</th></tr></thead>
+        <tbody>
+            @foreach (var e in Model.Entries)
+            {
+                <tr>
+                    <td class="nowrap">@Display.LocalTime(e.At, "Africa/Johannesburg", "d MMM yyyy, HH:mm:ss")</td>
+                    <td>@(e.Email ?? "system")</td>
+                    <td>@e.Action</td>
+                    <td><code>@e.Target</code></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<nav class="pager" aria-label="Pages">
+    @if (Model.PageNumber > 1)
+    {
+        <a class="btn" asp-route-p="@(Model.PageNumber - 1)">Newer</a>
+    }
+    <span>Page @Model.PageNumber</span>
+    @if (Model.HasMore)
+    {
+        <a class="btn" asp-route-p="@(Model.PageNumber + 1)">Older</a>
+    }
+</nav>
